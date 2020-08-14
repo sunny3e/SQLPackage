@@ -8,6 +8,7 @@
 
 import Foundation
 import Logging
+import SQLite3
 
 //Constants
 let SQL             = "SQL"
