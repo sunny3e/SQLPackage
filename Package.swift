@@ -33,7 +33,8 @@ let package = Package(
         .target(
             name: "SQLDataAccess",
             dependencies: [.product(name:"Logging", package:"swift-log"),"ObjectMapper"],path:"Sources/SQLDataAccess"),
-        .target(name:"DataManager",
+        .target(name:"DataManager"
+            ,dependencies:["SQLDataAccess"],
                 path:"Sources/DataManager"),
         .target(name:"Sqldb",
         path:"Sources/Sqldb"),
