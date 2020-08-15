@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import SQLDataAccess
 
 public class DataManager: NSObject {
 
