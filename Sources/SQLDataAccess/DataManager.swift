@@ -8,7 +8,7 @@
 
 import UIKit
 
-public class DataManager: NSObject {
+open class DataManager: NSObject {
 
     static var dataAccess = SQLDataAccess()
     static var dateFormatter = DateFormatter()
