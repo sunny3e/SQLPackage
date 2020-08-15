@@ -13,13 +13,8 @@ import SQLite3
 //Constants
 let SQL             = "SQL"
 let PARAMS          = "PARAMS"
-let EN_KEY          = "45763887E33478287EFFEB42890CD1EF"
 
-private let SQLITE_DATE = SQLITE_NULL + 1
-private let SQLITE_STATIC = unsafeBitCast(0, to:sqlite3_destructor_type.self)
-private let SQLITE_TRANSIENT = unsafeBitCast(-1, to:sqlite3_destructor_type.self)
-
-class SQLDataAccess: NSObject {
+public class SQLDataAccess: NSObject {
     
     static let shared = SQLDataAccess()
     var DB_FILE = "SQLite.db"
@@ -28,6 +23,10 @@ class SQLDataAccess: NSObject {
     private var queue:DispatchQueue!
     private var sqlite3dbConn:OpaquePointer? = nil
     private let db_format = DateFormatter()
+    private let SQLITE_DATE = SQLITE_NULL + 1
+    private let SQLITE_STATIC = unsafeBitCast(0, to:sqlite3_destructor_type.self)
+    private let SQLITE_TRANSIENT = unsafeBitCast(-1, to:sqlite3_destructor_type.self)
+    private let EN_KEY = "45763887E33478287EFFEB42890CD1EF"
     private var logger = Logger(label: "DA")
 
     public override init() {

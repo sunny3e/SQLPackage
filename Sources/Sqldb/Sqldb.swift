@@ -15,7 +15,7 @@
 import UIKit
 
 
-protocol Sqldb {
+public protocol Sqldb {
     //Every Model requires tableName to be defined for protocol
     var sortAlpha:Bool {set get}
     var tableName:String? {get}
@@ -24,7 +24,7 @@ protocol Sqldb {
     func getTableDescription() -> String
 }
 
-extension Sqldb {
+public extension Sqldb {
     
     var sortAlpha:Bool {
         get { return false}

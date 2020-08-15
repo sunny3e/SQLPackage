@@ -14,6 +14,12 @@ let package = Package(
         .library(
             name: "SQLDataAccess",
             targets: ["SQLDataAccess"]),
+        .library(
+        name: "DataManager",
+        targets: ["DataManager"]),
+        .library(
+        name: "Sqldb",
+        targets: ["Sqldb"]),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
@@ -26,7 +32,11 @@ let package = Package(
 
         .target(
             name: "SQLDataAccess",
-            dependencies: [.product(name:"Logging", package:"swift-log"),"ObjectMapper"],path:"Sources"),
+            dependencies: [.product(name:"Logging", package:"swift-log"),"ObjectMapper"],path:"Sources/SQLDataAccess"),
+        .target(name:"DataManager",
+                path:"Sources/DataManager"),
+        .target(name:"Sqldb",
+        path:"Sources/Sqldb"),
         .testTarget(
             name: "SQLPackageTests",
             dependencies: ["SQLDataAccess"]),

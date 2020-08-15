@@ -8,12 +8,10 @@
 
 import UIKit
 
-open class DataManager: NSObject {
+public class DataManager: NSObject {
 
     static var dataAccess = SQLDataAccess()
     static var dateFormatter = DateFormatter()
-
-    public init() {}
     
     @discardableResult public override init() {
         super.init()
