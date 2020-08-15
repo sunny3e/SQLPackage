@@ -22,31 +22,31 @@ public class DataManager: NSObject {
         DataManager.dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
     }
     
-    class func initDateFormatters()
+    class public func initDateFormatters()
     {
         DataManager.dateFormatter.locale = Locale(identifier:"en_US_POSIX")
         DataManager.dateFormatter.timeZone = TimeZone(secondsFromGMT:0)
         DataManager.dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
     }
     
-    class func closeDBConnection()
+    class public func closeDBConnection()
     {
         dataAccess.closeConnection()
     }
     
-    class func openDBConnection() -> Bool
+    class public func openDBConnection() -> Bool
     {
         let status:Bool = dataAccess.openConnection(copyFile:true)
         return status
     }
     
-    class func getCurrentTimeStamp() -> Int64
+    class public func getCurrentTimeStamp() -> Int64
     {
         let utcEpoc  = Int64(Date().timeIntervalSince1970)
         return utcEpoc
     }
     
-    class func utcDateTime() -> String
+    class public func utcDateTime() -> String
     {
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
         dateFormatter.timeZone = TimeZone.init(abbreviation:"UTC")
@@ -54,7 +54,7 @@ public class DataManager: NSObject {
         return utcDateTime
     }
     
-    class func pathForFileWithName(fileName:String) -> String
+    class public func pathForFileWithName(fileName:String) -> String
     {
         let fm = FileManager.default
         let docDir = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory, FileManager.SearchPathDomainMask.userDomainMask, true)[0]
@@ -71,7 +71,7 @@ public class DataManager: NSObject {
         }
     }
     
-    class func doesFileExistWithName(fileName:String) -> Bool
+    class public func doesFileExistWithName(fileName:String) -> Bool
     {
         var status:Bool = false
         let fm = FileManager.default
@@ -83,7 +83,7 @@ public class DataManager: NSObject {
         return status
     }
     
-    class func deleteFileWithName(fileName:String) -> Bool
+    class public func deleteFileWithName(fileName:String) -> Bool
     {
         var status:Bool = false
         let fm = FileManager.default
@@ -99,7 +99,7 @@ public class DataManager: NSObject {
         return status
     }
     
-    class func moveDBtoDocumentDirectory(fileName:String) -> Bool
+    class public func moveDBtoDocumentDirectory(fileName:String) -> Bool
     {
         var status:Bool = false
         let fm = FileManager.default
@@ -117,7 +117,7 @@ public class DataManager: NSObject {
         return status
     }
     
-    @discardableResult class func copyDBtoDocumentDirectory(copyDBFile:String, toDBFile:String) -> Bool
+    @discardableResult class public func copyDBtoDocumentDirectory(copyDBFile:String, toDBFile:String) -> Bool
     {
         var status:Bool = false
         let fm = FileManager.default
@@ -137,7 +137,7 @@ public class DataManager: NSObject {
         return status
     }
     
-    @discardableResult class func replaceDBinDocumentDirectory(removeDBFile:String, renameDBFile:String) -> Bool
+    @discardableResult class public func replaceDBinDocumentDirectory(removeDBFile:String, renameDBFile:String) -> Bool
     {
         var status:Bool = false
         let fm = FileManager.default
