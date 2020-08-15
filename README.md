@@ -157,13 +157,13 @@ class Models: NSObject {
   
   For your App you'll need to create a new AppInfo struct and the equivalent Model for it.
   
-##Advantages of using SQLPackage
+## Advantages of using SQLPackage
   
   As you can see writing the SQL statements is easy for your Models since SQLDataAccess supports writing the SQL statements directly with simple strings like, 'select * from AppInfo'. You don't need to worry about Preferred Statements and obscure SQLite3 low level C method calls, SQLDataAccess does all that for you, and is battle tested so it doesn't leak memory and uses a queue to sync all your operations so they are guaranteed to complete on the proper thread. SQLDataAccess can run on the back ground thread or the foreground thread without crashing unlike Core Data and Realm. Typically you'll write or insert into your DB on a back ground thread through a Server API using Alamofire and decode the Server JSON using the Codable Model defined in AppInfo.swift. Once your data has been written into SQLite, then just issue a completion event to your View Controller, and then call your View Model which will then consume the data from SQLDataAccess on the foreground thread to display your just updated data in your view controller so it can display it.
 
 You can also write the SQL Queries if you choose too, but having the Models.swift do it for you takes advantage of Sqldb extension which creates the inserts and updates for you automatically as long as you define your Codable model properly. 
 
-##SQL Transactions
+## SQL Transactions
 
 SQLDataAccess supports high performance SQL Transactions. This is where you can literally write 1,000 inserts into the DB all at once, and SQLite will do this very quickly. All Transactions are is an Array of SQL Queries that are append together, and then you execute all of them at once with:
 
@@ -173,11 +173,11 @@ SQLDataAccess supports high performance SQL Transactions. This is where you can 
 
 The advantage of this is you can literally insert 1,000 Objects at once which is exponentially faster than doing individual inserts back to back. This comes in very handy when your Server API returns a hundred JSON objects that need to be saved in your DB quickly. SQLDataAccess spends no more than a few hundred milliseconds writing all that data into the DB, rather than seconds if you were to do them individually.
 
-##Simple SQL Queries
+## Simple SQL Queries
 
 When you write your SQL Queries as a String, all the terms that follow are in a variadic argument list of type Any, and your parameters are in an Array. All these terms are separated by commas in your list of SQL arguments. You can enter Strings, Integers, Date’s, and Blobs right after the sequel statement since all of these terms are considered to be parameters for the SQL. The variadic argument array just makes it convenient to enter all your sequel in just one executeStatement or getRecordsForQuery call. If you don’t have any parameters, don’t enter anything after your SQL.
 
-##Data Types SQLDataAccess Supports
+## Data Types SQLDataAccess Supports
 
 The results array is an Array of Dictionary’s where the ‘key’ is your tables column name, and the ‘value’ is your data obtained from SQLite. You can easily iterate through this array with a for loop or print it out directly or assign these Dictionary elements to custom data object Classes that you use in your View Controllers for model consumption.
 
@@ -197,11 +197,11 @@ You can even store Nulls of type ***Null.***
 
 You just declare these types in tables, and and your Codable struct, and SQLDataAccess does the rest for you!
 
-##SQLCipher and Encryption
+## SQLCipher and Encryption
 	
 In addition SQLDataAccess will also work with SQLCipher, and it's pretty easy to do. To use SQLCipher you must remove 'libsqlite3.tbd' and add 'libsqlcipher-ios.a'. You must also add '-DSQLITE_HAS_CODEC', you then encrypt the Database by calling DataManager.dataAccess.dbEncrypt(key), and you can decrypt it using DataManager.dataAccess.dbDecrypt(). You just set your encryption key, and your done. 
 
-##Battle Tested and High Performance
+## Battle Tested and High Performance
 
 SQLDataAccess is a very fast and efficient class and guaranteed to not leak memory, and uses the low level C calls from SQLite, and nothing is faster then low level C. SQLDataAccess can be used in place of CoreData or Realm which really just uses SQLite as it's underlying data store without all the CoreData integrity fault crashes that come with CoreData. CoreData and Realm need to update their models on the main thread which is a real problem if you're trying to display data in a view controller which is consuming a lot of data at the same time. This means your view controller will become slow and not scroll efficiently for a TableView or CollectionView because it's updating CoreData or Realm Entities. In addition if you do these updates on a background thread Core Data and Realm will crash. SQLDataAccess has none of these threading problems, and you can read or write data on either the background or foreground threads, and it's thread safe and guaranteed to finish an update or insert before it starts another one.
 
