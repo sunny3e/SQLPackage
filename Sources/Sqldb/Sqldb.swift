@@ -113,7 +113,7 @@ public extension Sqldb {
         }
         sql += sqlWhere
         params.append(contentsOf:paramsWhere)
-        let sqlParams = [SQL:sql,PARAMS:params] as [String : Any]
+        let sqlParams = ["SQL":sql,"PARAMS":params] as [String : Any]
         return sqlParams
     }
 
@@ -170,7 +170,7 @@ public extension Sqldb {
             index += 1
         }
         sql += ")"
-        let sqlParams = [SQL:sql,PARAMS:params] as [String : Any]
+        let sqlParams = ["SQL":sql,"PARAMS":params] as [String : Any]
         return sqlParams
     }
         

@@ -79,7 +79,7 @@ public class SQLDataAccess: NSObject {
         sqlite3dbConn = nil;
     }
     
-    override var description:String {
+    public override var description:String {
         return "DA : DB path \(path!)"
     }
     
@@ -154,8 +154,8 @@ public class SQLDataAccess: NSObject {
     
     public func dbDecrypt()
     {
-        DataManager.copyDBtoDocumentDirectory(copyDBFile: DB_FILE, toDBFile: DB_FILE+"X")
-        let dbFileX = DataManager.pathForFileWithName(fileName: DB_FILE+"X")
+        copyDBtoDocumentDirectory(copyDBFile: DB_FILE, toDBFile: DB_FILE+"X")
+        let dbFileX = pathForFileWithName(fileName: DB_FILE+"X")
         let sql1 = String(format:"attach database '%@' as plaintext KEY '';",dbFileX)
         sqlite3_exec(sqlite3dbConn, sql1, nil, nil, nil)
         
@@ -170,8 +170,8 @@ public class SQLDataAccess: NSObject {
             let errMsg = String(validatingUTF8:sqlite3_errmsg(sqlite3dbConn))
             logger.error("DA : DECRYPT : sqlErrCode = \(errCode) : sqlErrMsg = \(errMsg!)")
         }
-        DataManager.replaceDBinDocumentDirectory(removeDBFile: DB_FILE, renameDBFile: DB_FILE+"X")
-        let path = DataManager.pathForFileWithName(fileName: DB_FILE)
+        replaceDBinDocumentDirectory(removeDBFile: DB_FILE, renameDBFile: DB_FILE+"X")
+        let path = pathForFileWithName(fileName: DB_FILE)
         // Open the DB
         let cpath = path.cString(using:String.Encoding.utf8)
         let error = sqlite3_open(cpath!, &sqlite3dbConn)
@@ -481,4 +481,73 @@ public class SQLDataAccess: NSObject {
         return status
     }
     
+    @discardableResult func copyDBtoDocumentDirectory(copyDBFile:String, toDBFile:String) -> Bool
+    {
+        var status:Bool = false
+        let fm = FileManager.default
+        let docDir = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory, FileManager.SearchPathDomainMask.userDomainMask, true)[0]
+        let copyDBPath = (docDir as NSString).appendingPathComponent(copyDBFile)
+        let toDBPath = (docDir as NSString).appendingPathComponent(toDBFile)
+        
+        if !(fm.fileExists(atPath:copyDBPath)) {
+            do {
+                try fm.copyItem(atPath:copyDBPath, toPath:toDBPath)
+                status = true
+            } catch let error {
+                assert(false, "DA : copyDB : Failed to copy file \(copyDBPath) to \(toDBPath) Error - \(error.localizedDescription)")
+                status = false
+            }
+        }
+        return status
+    }
+    
+    func pathForFileWithName(fileName:String) -> String
+    {
+        let fm = FileManager.default
+        let docDir = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory, FileManager.SearchPathDomainMask.userDomainMask, true)[0]
+        let path = (docDir as NSString).appendingPathComponent(fileName)
+        if (fm.fileExists(atPath:path))  {
+            var url = NSURL.fileURL(withPath: docDir)
+            url.setTemporaryResourceValue(NSNumber(value:true), forKey: URLResourceKey.isExcludedFromBackupKey)
+            return path
+        }
+        else
+        {
+            assert(false, "DM : pathFor : Path for file \(fileName)! Not Found ")
+            return ""
+        }
+    }
+    
+    func replaceDBinDocumentDirectory(removeDBFile:String, renameDBFile:String) -> Bool
+    {
+        var status:Bool = false
+        let fm = FileManager.default
+        let docDir = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory, FileManager.SearchPathDomainMask.userDomainMask, true)[0]
+        let removeDBPath = (docDir as NSString).appendingPathComponent(removeDBFile)
+        let renameDBPath = (docDir as NSString).appendingPathComponent(renameDBFile)
+        
+        do {
+            try fm.removeItem(atPath: removeDBPath)
+            status = true
+        } catch let error {
+            assert(false, "DM : replaceDB : Failed to remove file \(removeDBFile)! Error - \(error.localizedDescription)")
+            status = false
+            return status
+        }
+        
+        do {
+            try fm.moveItem(atPath: renameDBPath, toPath: removeDBPath)
+            status = true
+        } catch let error {
+            assert(false, "DM : replaceDB : Failed to move file \(renameDBFile)! Error - \(error.localizedDescription)")
+            status = false
+            return status
+        }
+        
+        if !(fm.fileExists(atPath:removeDBPath)) {
+            assert(false, "DA : replaceDB : Failed to replace file \(removeDBFile) with \(renameDBFile) Error ")
+            status = false
+        }
+        return status
+    }
 }
