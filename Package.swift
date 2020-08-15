@@ -26,7 +26,7 @@ let package = Package(
 
         .target(
             name: "SQLDataAccess",
-            dependencies: [.product(name:"Logging", package:"swift-log"),"ObjectMapper"]),
+            dependencies: [.product(name:"Logging", package:"swift-log"),"ObjectMapper"],path:"Sources"),
         .testTarget(
             name: "SQLPackageTests",
             dependencies: ["SQLDataAccess"]),
