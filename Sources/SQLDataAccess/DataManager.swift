@@ -13,6 +13,8 @@ open class DataManager: NSObject {
     static var dataAccess = SQLDataAccess()
     static var dateFormatter = DateFormatter()
 
+    public init() {}
+    
     @discardableResult public override init() {
         super.init()
         //for 24-hour format need locale to work, ISO-8601 format
