@@ -8,7 +8,7 @@ You only need to add SQLPackage to your Xcode Project to use.
 
 It will also add two other packages, Apples Logger, and ObjectMapper, this is done automatically through the package dependencies.
   
-To add this package go to Xcode Project 'Info' 'Build Settings' 'Swift Packages' select 'Swift Packages' and hit the '+' button and then enter the URL(git@github.com:pmurphyjam/SQLPackage.git) for this. Xcode should then do the rest for you.
+To add this package go to Xcode Project 'Info' 'Build Settings' 'Swift Packages' select 'Swift Packages' and hit the '+' button and then enter the URL(git@github.com:pmurphyjam/SQLPackage.git) for this. Xcode should then do the rest for you. There will be three Packages, SQLDataAccess, DataManager, Sqldb, click on all three.
 
 ## Initializing SQLPackage
 
@@ -18,8 +18,8 @@ The default SQL DB is named, "SQLite.db", but you can name it anything by callin
 
 ```swift
     DataManager.init()
-    DataManager.dataAccess.setDBName(name:"MySQL.db")
-    let opened = DataManager.dataAccess.openConnection(copyFile:true)
+    DataManager.setDBName(name:"MySQL.db")
+    let opened = DataManager.openDBConnection()
 ```
    You will need to put "MySQL.db" into a Resources directory so Xcode can see it. You can then edit the tables in "MySQL.db" or use Table Create to create your own tables for it. DataManager expects to find "MySQL.db" in Bundle directory of your App. If your DB is copied correctly opened will return true.
    
@@ -32,6 +32,10 @@ SQLPackage with Sqldb.swift makes it super easy to create SQL Queries like:
 In addition queries like insert and update are created automatically for you so you don't have to write these out. To do this you need to create a Codable model for your DB table.
 
 ```swift
+import UIKit
+import ObjectMapper
+import SQLDataAccess
+import Sqldb
 struct AppInfo: Codable,Sqldb,Mappable {
     
     //Define tableName for Sqldb required for Protocol
@@ -102,9 +106,15 @@ struct AppInfo: Codable,Sqldb,Mappable {
   You will also need to create a Models.swift class which creates your SQL functions for AppInfo. InsertAppInfoSQL automatically creates the insert SQL & PARAMS Dictionary for you by using the Sqldb.getSQLInsert() method. The same goes for updateAppInfoSQL. The function Models.getAppInfo reads the DB and returns SQL & PARAMS Dictionary and then Maps this to the AppInfo struct by using dbDecode method, and does this in just 7 lines of code for any structure.
  
  ```swift
+ import Foundation
+import Logging
+import DataManager
+
 class Models: NSObject {
 
     static var logger = Logger(label: "Models")
+    static let SQL             = "SQL"
+    static let PARAMS          = "PARAMS"
     
     // MARK: - AppInfo
     class func insertAppInfoSQL(_ appInfo:AppInfo) -> Dictionary<String,Any>
@@ -119,7 +129,7 @@ class Models: NSObject {
     @discardableResult class func insertAppInfo(_ appInfo:AppInfo) -> Bool
     {
         let sqlParams = self.insertAppInfoSQL(appInfo)
-        let status = DataManager.dataAccess.executeStatement(sqlParams[SQL] as! String, withParams: sqlParams[PARAMS] as! Array<Any>)
+        let status = DataManager.executeStatement(sqlParams[SQL] as! String, withParams: sqlParams[PARAMS] as! Array<Any>)
         return status
     }
     
@@ -133,14 +143,14 @@ class Models: NSObject {
     @discardableResult class func updateAppInfo(_ appInfo:AppInfo) -> Bool
     {
         let sqlParams = self.updateAppInfoSQL(appInfo)
-        let status = DataManager.dataAccess.executeStatement(sqlParams[SQL] as! String, withParams: sqlParams[PARAMS] as! Array<Any>)
+        let status = DataManager.executeStatement(sqlParams[SQL] as! String, withParams: sqlParams[PARAMS] as! Array<Any>)
         return status
     }
     
     class func getAppInfo() -> [AppInfo]
     {
         let appInfo:AppInfo? = AppInfo()
-        let dataArray = DataManager.dataAccess.getRecordsForQuery("select * from AppInfo ")
+        let dataArray = DataManager.getRecordsForQuery("select * from AppInfo ")
         let appInfoArray = appInfo?.dbDecode(dataArray:dataArray as! Array<[String : AnyObject]>)
         return appInfoArray!
     }
@@ -168,7 +178,7 @@ You can also write the SQL Queries if you choose too, but having the Models.swif
 SQLDataAccess supports high performance SQL Transactions. This is where you can literally write 1,000 inserts into the DB all at once, and SQLite will do this very quickly. All Transactions are is an Array of SQL Queries that are append together, and then you execute all of them at once with:
 
 ```swift
-   let status1 = DataManager.dataAccess.executeTransaction(sqlAndParams)
+   let status1 = DataManager.executeTransaction(sqlAndParams)
 ```
 
 The advantage of this is you can literally insert 1,000 Objects at once which is exponentially faster than doing individual inserts back to back. This comes in very handy when your Server API returns a hundred JSON objects that need to be saved in your DB quickly. SQLDataAccess spends no more than a few hundred milliseconds writing all that data into the DB, rather than seconds if you were to do them individually.
