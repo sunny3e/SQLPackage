@@ -199,7 +199,7 @@ For Text you can store ***char, character, clob, national varying character, nat
 
 For Dates you can store ***datetime, time, timestamp, date.*** No need to convert Dates to Strings and back and forth, SQLDataAccess does all that for you!
 
-For Integers you can store ***bigint, bit, bool, boolean, int2, int8, integer, mediumint, smallint, tinyint, int.**
+For Integers you can store ***bigint, bit, bool, boolean, int2, int8, integer, mediumint, smallint, tinyint, int.***
 
 For Doubles you can store ***decimal, double precision, float, numeric, real, double.*** Double has the most precision.
 
