@@ -20,6 +20,7 @@ public class DataManager: NSObject {
         DataManager.dateFormatter.locale = Locale(identifier:"en_US_POSIX")
         DataManager.dateFormatter.timeZone = TimeZone(secondsFromGMT:0)
         DataManager.dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        DataManager.dataAccess = SQLDataAccess()
     }
     
     class public func initDateFormatters()
@@ -27,6 +28,26 @@ public class DataManager: NSObject {
         DataManager.dateFormatter.locale = Locale(identifier:"en_US_POSIX")
         DataManager.dateFormatter.timeZone = TimeZone(secondsFromGMT:0)
         DataManager.dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+    }
+    
+    class public func executeStatement(_ query: String!, _ args:Any...) -> Bool {
+        return dataAccess.executeStatement(query, args)
+    }
+    
+    @discardableResult class public func executeStatement(_ query: String, withParams parameters: Array<Any>!) -> Bool {
+        return dataAccess.executeStatement(query, withParams: parameters)
+    }
+    
+    class public func getRecordsForQuery(_ query: String!, _ args:Any...) -> Array<Any> {
+        return dataAccess.getRecordsForQuery(query, args)
+    }
+    
+    class public func getRecordsForQuery(_ query: String!, withParams parameters: Array<Any>!) -> Array<[String:Any]> {
+        return dataAccess.getRecordsForQuery(query, withParams: parameters)
+    }
+    
+    @discardableResult class public func executeTransaction(_ sqlAndParamsForTransaction: Array<[String:Any]>!) -> Bool {
+        return dataAccess.executeTransaction(sqlAndParamsForTransaction)
     }
     
     class public func closeDBConnection()
