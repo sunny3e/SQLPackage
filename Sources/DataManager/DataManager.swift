@@ -29,6 +29,28 @@ public class DataManager: NSObject {
         DataManager.dateFormatter.timeZone = TimeZone(secondsFromGMT:0)
         DataManager.dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
     }
+        
+    class public func closeDBConnection()
+    {
+        dataAccess.closeConnection()
+    }
+    
+    class public func openDBConnection() -> Bool
+    {
+        let status:Bool = dataAccess.openConnection(copyFile:true)
+        return status
+    }
+    
+    //Make all the SQLDataAccess methods public and accessible
+    class public func setDBName(name:String)
+    {
+        dataAccess.setDBName(name: name)
+    }
+    
+    class public func getDBName() -> String
+    {
+        return dataAccess.getDBName()
+    }
     
     class public func executeStatement(_ query: String!, _ args:Any...) -> Bool {
         return dataAccess.executeStatement(query, args)
@@ -48,17 +70,6 @@ public class DataManager: NSObject {
     
     @discardableResult class public func executeTransaction(_ sqlAndParamsForTransaction: Array<[String:Any]>!) -> Bool {
         return dataAccess.executeTransaction(sqlAndParamsForTransaction)
-    }
-    
-    class public func closeDBConnection()
-    {
-        dataAccess.closeConnection()
-    }
-    
-    class public func openDBConnection() -> Bool
-    {
-        let status:Bool = dataAccess.openConnection(copyFile:true)
-        return status
     }
     
     class public func getCurrentTimeStamp() -> Int64
