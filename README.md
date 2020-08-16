@@ -191,9 +191,9 @@ When you write your SQL Queries as a String, all the terms that follow are in a 
 
 The results array is an Array of Dictionary’s where the ‘key’ is your tables column name, and the ‘value’ is your data obtained from SQLite. You can easily iterate through this array with a for loop or print it out directly or assign these Dictionary elements to custom data object Classes that you use in your View Controllers for model consumption.
 
-SQLDataAccess will store, text, double, float, blob, Date, integer and long long integers. 
+SQLDataAccess will store, ***text, double, float, blob, Date, integer and long long integers***. 
 
-For Blobs you can store binary, varbinary, blob.
+For Blobs you can store ***binary, varbinary, blob.***
 
 For Text you can store ***char, character, clob, national varying character, native character, nchar, nvarchar, varchar, variant, varying character, text***.
 
@@ -209,7 +209,7 @@ You just declare these types in tables, and and your Codable struct, and SQLData
 
 ## SQLCipher and Encryption
 	
-In addition SQLDataAccess will also work with SQLCipher, and it's pretty easy to do. To use SQLCipher you must remove 'libsqlite3.tbd' and add 'libsqlcipher-ios.a'. You must also add '-DSQLITE_HAS_CODEC', you then encrypt the Database by calling DataManager.dataAccess.dbEncrypt(key), and you can decrypt it using DataManager.dataAccess.dbDecrypt(). You just set your encryption key, and your done. 
+In addition SQLDataAccess will also work with SQLCipher, and it's pretty easy to do. To use SQLCipher you must remove 'libsqlite3.tbd' and add 'libsqlcipher-ios.a'. You must also add '-DSQLITE_HAS_CODEC', you then encrypt the Database by calling DataManager.dbEncrypt(key), and you can decrypt it using DataManager.dbDecrypt(). You just set your encryption key, and your done. 
 
 ## Battle Tested and High Performance
 

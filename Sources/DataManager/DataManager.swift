@@ -52,6 +52,16 @@ public class DataManager: NSObject {
         return dataAccess.getDBName()
     }
     
+    class public func dbEncrypt(_ key:String)
+    {
+        dataAccess.dbEncrypt(key)
+    }
+    
+    class public func dbDecrypt()
+    {
+        dataAccess.dbDecrypt()
+    }
+    
     class public func executeStatement(_ query: String!, _ args:Any...) -> Bool {
         return dataAccess.executeStatement(query, args)
     }
