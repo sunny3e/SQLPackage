@@ -103,61 +103,80 @@ struct AppInfo: Codable,Sqldb,Mappable {
   
 ### Create Your Models 
   
-  You will also need to create a Models.swift class which creates your SQL functions for AppInfo. InsertAppInfoSQL automatically creates the insert SQL & PARAMS Dictionary for you by using the Sqldb.getSQLInsert() method. The same goes for updateAppInfoSQL. The function Models.getAppInfo reads the DB and returns SQL & PARAMS Dictionary and then Maps this to the AppInfo struct by using dbDecode method, and does this in just 7 lines of code for any structure.
+  You will also need to create a Models.swift struct which creates your SQL functions for AppInfo. InsertAppInfoSQL automatically creates the insert SQL & PARAMS Dictionary for you by using the Sqldb.getSQLInsert() method. The same goes for updateAppInfoSQL. The function Models.getAppInfo reads the DB and returns SQL & PARAMS Dictionary and then Maps this to the AppInfo struct by using dbDecode method, and does this in just 7 lines of code for any structure.
  
  ```swift
- import Foundation
+import Foundation
 import Logging
 import DataManager
 
-class Models: NSObject {
+struct Models {
 
-    static var logger = Logger(label: "Models")
     static let SQL             = "SQL"
     static let PARAMS          = "PARAMS"
     
-    // MARK: - AppInfo
-    class func insertAppInfoSQL(_ appInfo:AppInfo) -> Dictionary<String,Any>
+    static var log: Logger
     {
-        //Here we let Sqldb create the SQL insert syntax for us
-        let sqlParams = appInfo.getSQLInsert()!
+        var logger = Logger(label: "Models")
         logger.logLevel = .debug
-        logger.debug("Models : insertAppInfoSQL : sqlParams = \(sqlParams) ")
+        return logger
+    }
+    
+    // MARK: - AppInfo
+    static func insertAppInfoSQL(_ appInfo:AppInfo) -> Dictionary<String,Any>
+    {
+        //Let Sqldb create the SQL insert syntax for us
+        //creates SQL : insert into AppInfo (name,value,descript,date,blob) values(?,?,?,?,?)
+        let sqlParams = appInfo.getSQLInsert()!
+        logger.debug("insertAppInfoSQL : sqlParams = \(sqlParams) ")
         return sqlParams
     }
     
-    @discardableResult class func insertAppInfo(_ appInfo:AppInfo) -> Bool
+    @discardableResult static func insertAppInfo(_ appInfo:AppInfo) -> Bool
     {
         let sqlParams = self.insertAppInfoSQL(appInfo)
-        let status = DataManager.executeStatement(sqlParams[SQL] as! String, withParams: sqlParams[PARAMS] as! Array<Any>)
+        let status = DataManager.dataAccess.executeStatement(sqlParams[SQL] as! String, withParams: sqlParams[PARAMS] as! Array<Any>)
         return status
     }
     
-    class func updateAppInfoSQL(_ appInfo:AppInfo) -> Dictionary<String,Any>
+    static func updateAppInfoSQL(_ appInfo:AppInfo) -> Dictionary<String,Any>
     {
+        //Let Sqldb create the SQL update syntax for us
+        //creates SQL : update AppInfo set value = ?, descrip = ?, data = ?, blob = ? where name = ?
         let sqlParams = appInfo.getSQLUpdate(whereItems:"name")!
-        logger.debug("Models : updateAppInfoSQL : sqlParams = \(sqlParams) ")
+        logger.debug("updateAppInfoSQL : sqlParams = \(sqlParams) ")
         return sqlParams
     }
     
-    @discardableResult class func updateAppInfo(_ appInfo:AppInfo) -> Bool
+    @discardableResult static func updateAppInfo(_ appInfo:AppInfo) -> Bool
     {
         let sqlParams = self.updateAppInfoSQL(appInfo)
-        let status = DataManager.executeStatement(sqlParams[SQL] as! String, withParams: sqlParams[PARAMS] as! Array<Any>)
+        let status = DataManager.dataAccess.executeStatement(sqlParams[SQL] as! String, withParams: sqlParams[PARAMS] as! Array<Any>)
         return status
     }
     
-    class func getAppInfo() -> [AppInfo]
+    static func getAppInfo() -> [AppInfo]
     {
         let appInfo:AppInfo? = AppInfo()
-        let dataArray = DataManager.getRecordsForQuery("select * from AppInfo ")
+        let dataArray = DataManager.dataAccess.getRecordsForQuery("select * from AppInfo ")
         let appInfoArray = appInfo?.dbDecode(dataArray:dataArray as! Array<[String : AnyObject]>)
         return appInfoArray!
+    }
+    
+    static func doesAppInfoExistForName(_ name:String) -> Bool
+    {
+        var status:Bool? = false
+        let dataArray = DataManager.dataAccess.getRecordsForQuery("select name from AppInfo where name = ?",name)
+        if (dataArray.count > 0)
+        {
+            status = true
+        }
+        return status!
     }
  
  ```
   
-  And that's it, now you can add additional methods to your Model's class and create Models for other tables if you want. 
+  And that's it, now you can add additional methods to your Model's struct and create Models for other tables if you want. 
   
   Since this is just a Swift Package, it doesn't include AppInfo or Models, but 
   
