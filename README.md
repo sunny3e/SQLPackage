@@ -128,7 +128,7 @@ struct Models {
         //Let Sqldb create the SQL insert syntax for us
         //creates SQL : insert into AppInfo (name,value,descript,date,blob) values(?,?,?,?,?)
         let sqlParams = appInfo.getSQLInsert()!
-        logger.debug("insertAppInfoSQL : sqlParams = \(sqlParams) ")
+        log.debug("insertAppInfoSQL : sqlParams = \(sqlParams) ")
         return sqlParams
     }
     
@@ -144,7 +144,7 @@ struct Models {
         //Let Sqldb create the SQL update syntax for us
         //creates SQL : update AppInfo set value = ?, descrip = ?, data = ?, blob = ? where name = ?
         let sqlParams = appInfo.getSQLUpdate(whereItems:"name")!
-        logger.debug("updateAppInfoSQL : sqlParams = \(sqlParams) ")
+        log.debug("updateAppInfoSQL : sqlParams = \(sqlParams) ")
         return sqlParams
     }
     
