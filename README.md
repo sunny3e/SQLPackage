@@ -197,7 +197,7 @@ You can also write the SQL Queries if you choose too, but having the Models.swif
 SQLDataAccess supports high performance SQL Transactions. This is where you can literally write 1,000 inserts into the DB all at once, and SQLite will do this very quickly. All Transactions are is an Array of SQL Queries that are append together, and then you execute all of them at once with:
 
 ```swift
-   let status1 = DataManager.executeTransaction(sqlAndParams)
+   let status1 = DataManager.dataAccess.executeTransaction(sqlAndParams)
 ```
 
 The advantage of this is you can literally insert 1,000 Objects at once which is exponentially faster than doing individual inserts back to back. This comes in very handy when your Server API returns a hundred JSON objects that need to be saved in your DB quickly. SQLDataAccess spends no more than a few hundred milliseconds writing all that data into the DB, rather than seconds if you were to do them individually.
