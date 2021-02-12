@@ -332,7 +332,8 @@ public class SQLDataAccess: NSObject {
         if buf != nil {
             var tmp = String(validatingUTF8:buf!)!.uppercased()
             if let pos = tmp.range(of:"(") {
-                tmp = tmp.substring(to:pos.lowerBound)
+                tmp = String(tmp[..<pos.lowerBound])
+                //tmp = tmp.substring(to:pos.lowerBound)
             }
             if intTypes.contains(tmp) {
                 return SQLITE_INTEGER
@@ -518,7 +519,7 @@ public class SQLDataAccess: NSObject {
         }
     }
     
-    func replaceDBinDocumentDirectory(removeDBFile:String, renameDBFile:String) -> Bool
+    @discardableResult func replaceDBinDocumentDirectory(removeDBFile:String, renameDBFile:String) -> Bool
     {
         var status:Bool = false
         let fm = FileManager.default
