@@ -11,12 +11,13 @@ import SQLDataAccess
 
 public class DataManager: NSObject {
 
-    static var dataAccess = SQLDataAccess()
-    static var dateFormatter = DateFormatter()
+    static var dataAccess: SQLDataAccess!
+    static var dateFormatter: DateFormatter!
     
     @discardableResult public override init() {
         super.init()
         //for 24-hour format need locale to work, ISO-8601 format
+        DataManager.dateFormatter = DateFormatter()
         DataManager.dateFormatter.locale = Locale(identifier:"en_US_POSIX")
         DataManager.dateFormatter.timeZone = TimeZone(secondsFromGMT:0)
         DataManager.dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
@@ -60,26 +61,6 @@ public class DataManager: NSObject {
     class public func dbDecrypt()
     {
         dataAccess.dbDecrypt()
-    }
-    
-    class public func executeStatement(_ query: String!, _ args:Any...) -> Bool {
-        return dataAccess.executeStatement(query, args)
-    }
-    
-    @discardableResult class public func executeStatement(_ query: String, withParams parameters: Array<Any>!) -> Bool {
-        return dataAccess.executeStatement(query, withParams: parameters)
-    }
-    
-    class public func getRecordsForQuery(_ query: String!, _ args:Any...) -> Array<Any> {
-        return dataAccess.getRecordsForQuery(query, args)
-    }
-    
-    class public func getRecordsForQuery(_ query: String!, withParams parameters: Array<Any>!) -> Array<[String:Any]> {
-        return dataAccess.getRecordsForQuery(query, withParams: parameters)
-    }
-    
-    @discardableResult class public func executeTransaction(_ sqlAndParamsForTransaction: Array<[String:Any]>!) -> Bool {
-        return dataAccess.executeTransaction(sqlAndParamsForTransaction)
     }
     
     class public func getCurrentTimeStamp() -> Int64
