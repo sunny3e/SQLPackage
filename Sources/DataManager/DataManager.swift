@@ -11,7 +11,7 @@ import SQLDataAccess
 
 public class DataManager: NSObject {
 
-    static var dataAccess: SQLDataAccess!
+    static public var dataAccess: SQLDataAccess!
     static var dateFormatter: DateFormatter!
     
     @discardableResult public override init() {
