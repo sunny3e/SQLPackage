@@ -5,7 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "SQLPackage",
-    platforms: [.macOS(.v10_10),
+    platforms: [.macOS(.v10_11),
     .iOS(.v12),
     .tvOS(.v10),
     .watchOS(.v5)],
@@ -23,7 +23,8 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url: "git@github.com:apple/swift-log.git", from: "1.4.0"),
+        //.package(url: "git@github.com:apple/swift-log.git", from: "1.4.0"),
+        .package(url: "git@github.com:Nike-Inc/Willow.git", from: "5.2.0"),
         .package(url: "git@github.com:tristanhimmelman/ObjectMapper.git", from: "4.2.0"),
     ],
     targets: [
@@ -32,7 +33,7 @@ let package = Package(
 
         .target(
             name: "SQLDataAccess",
-            dependencies: [.product(name:"Logging", package:"swift-log"),"ObjectMapper"],path:"Sources/SQLDataAccess"),
+            dependencies: [.product(name:"Willow", package:"Willow"),"ObjectMapper"],path:"Sources/SQLDataAccess"),
         .target(name:"DataManager",
             dependencies:["SQLDataAccess"],
             path:"Sources/DataManager"),

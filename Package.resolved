@@ -11,12 +11,12 @@
         }
       },
       {
-        "package": "swift-log",
-        "repositoryURL": "git@github.com:apple/swift-log.git",
+        "package": "Willow",
+        "repositoryURL": "git@github.com:Nike-Inc/Willow.git",
         "state": {
           "branch": null,
-          "revision": "173f567a2dfec11d74588eea82cecea555bdc0bc",
-          "version": "1.4.0"
+          "revision": "67c567faf21f578149c030bb8e740ab87d11c508",
+          "version": "5.2.1"
         }
       }
     ]
