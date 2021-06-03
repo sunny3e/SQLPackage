@@ -24,7 +24,7 @@ let package = Package(
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         //.package(url: "git@github.com:apple/swift-log.git", from: "1.4.0"),
-        .package(url: "git@github.com:Nike-Inc/Willow.git", from: "5.2.0"),
+        .package(url: "git@github.com:Nike-Inc/Willow.git", from: "6.0.0"),
         .package(url: "git@github.com:tristanhimmelman/ObjectMapper.git", from: "4.2.0"),
     ],
     targets: [
