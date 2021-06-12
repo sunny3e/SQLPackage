@@ -195,7 +195,11 @@ public extension Sqldb {
                 guard let label = label else {
                     continue
                 }
-
+                
+                if(label == "sortAlpha") {
+                    break
+                }
+                
                 //Skip tableName and sortAlpha since they aren't needed for queries
                 if(label != "tableName" && label != "sortAlpha")
                 {
@@ -214,7 +218,11 @@ public extension Sqldb {
                 guard let label = label else {
                     continue
                 }
-
+                
+                if(label == "sortAlpha") {
+                    break
+                }
+                
                 //Skip tableName and sortAlpha since they aren't needed for queries
                 if(label != "tableName" && label != "sortAlpha")
                 {
