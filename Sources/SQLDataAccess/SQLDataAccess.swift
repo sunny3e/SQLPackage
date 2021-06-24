@@ -143,6 +143,25 @@ public class SQLDataAccess: NSObject {
         return true
     }
     
+    public func foreignKeys(_ enable:Bool)
+    {   var sql = String()
+        if(enable)
+        {
+            sql = String(format:"PRAGMA foreign_keys = ON;")
+        }
+        else
+        {
+            sql = String(format:"PRAGMA foreign_keys = OFF;")
+        }
+        sqlite3_exec(sqlite3dbConn, sql, nil, nil, nil);
+        let errCode = Int(sqlite3_errcode(sqlite3dbConn))
+        if(errCode != SQLITE_OK)
+        {
+            let errMsg = String(validatingUTF8:sqlite3_errmsg(sqlite3dbConn))
+            log.errorMessage("DA : foreignKeys : sqlErrCode = \(errCode) : sqlErrMsg = \(errMsg!)")
+        }
+    }
+    
     public func dbEncrypt(_ key:String)
     {
         let sql1 = String(format:"ft67s%@58uy%@fge4",EN_KEY,key)
