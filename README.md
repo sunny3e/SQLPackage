@@ -103,7 +103,7 @@ struct AppInfo: Codable,Sqldb,Mappable {
   
 ### Create Your Models 
   
-  You will also need to create a Models.swift struct which creates your SQL functions for AppInfo. InsertAppInfoSQL automatically creates the insert SQL & PARAMS Dictionary for you by using the Sqldb.getSQLInsert() method. The same goes for updateAppInfoSQL. The function Models.getAppInfo reads the DB and returns SQL & PARAMS Dictionary and then Maps this to the AppInfo struct by using dbDecode method, and does this in just 7 lines of code for any structure.
+  You will also need to create a Models.swift struct which creates your SQL functions for AppInfo. InsertAppInfoSQL automatically creates the insert SQL & PARAMS Dictionary for you by using the Sqldb.getSQLInsert() method. The same goes for updateAppInfoSQL. Both these methods insert or update Null or Nil data. If you want the SQL to skip over Null or Nil data in the SQL & PARAMS use the sqldb.getSQLInsertValid() or sqldb.getSQLUpdateValid methods, and only valid data will be inserted or updated. The function Models.getAppInfo reads the DB and returns SQL & PARAMS Dictionary and then Maps this to the AppInfo struct by using dbDecode method, and does this in just 7 lines of code for any structure.
  
  ```swift
 import Foundation
