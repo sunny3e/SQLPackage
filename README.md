@@ -226,6 +226,16 @@ You can even store Nulls of type ***Null.***
 
 You just declare these types in tables, and and your Codable struct, and SQLDataAccess does the rest for you!
 
+## Support for Foreign Keys
+SQLite supports foreign Keys which are used to enforce relationships between table Id's. These keys speed up your SQL queries and make it easy to delete or update items in tables quickly. By default SQLite comes with foreignKeys disabled, you have to turn it on with:
+
+```swift
+DataManager.openDBConnection()
+DataManager.dataAcess.foreignKeys(true)
+
+```
+Now foreign Key access is enabled and checked on all your SQL queries. Typically the Id's are primary keys that exist in the Parent and Child tables with the Child table having the foreign key constraints. The Id's must unique and can not be Null, and you can delay the foreign key check by adding a deferred clause, this means they will only be checked when the transaction is committed. For more information on foreign keys search for 'SQLite Foreign Key Support' in Google.
+
 ## SQLCipher and Encryption
 	
 In addition SQLDataAccess will also work with SQLCipher, and it's pretty easy to do. To use SQLCipher you must remove 'libsqlite3.tbd' and add 'libsqlcipher-ios.a'. You must also add '-DSQLITE_HAS_CODEC', you then encrypt the Database by calling DataManager.dbEncrypt(key), and you can decrypt it using DataManager.dbDecrypt(). You just set your encryption key, and your done. 
