@@ -20,7 +20,9 @@ public protocol Sqldb {
     var sortAlpha:Bool {set get}
     var tableName:String? {get}
     func getSQLInsert() -> Dictionary<String,Any>!
+    func getSQLInsertValid() -> Dictionary<String,Any>!
     func getSQLUpdate(whereItems:String) -> Dictionary<String,Any>!
+    func getSQLUpdateValid(whereItems:String) -> Dictionary<String,Any>!
     func getTableDescription() -> String
 }
 
@@ -117,6 +119,79 @@ public extension Sqldb {
         return sqlParams
     }
 
+    //Like above but skips Null or nil data in SQL
+    func getSQLUpdateValid(whereItems:String) -> Dictionary<String,Any>! {
+        let items = getProperties()
+        var params:Array<Any> = []
+        var sql:String = "update \(tableName!) set "
+        var sqlWhere:String = " where "
+        var paramsWhere:Array<Any> = []
+        var index:Int = 0
+        var whereIndex:Int = 0
+        var hasNull: Bool = false
+        
+        for array in items {
+            //Get our first and only array element containing our column dictionary
+            let obj = array.first!
+            //Create the where clause for update
+            if (whereItems.contains(obj.key)) {
+                if(whereIndex == 0)
+                {
+                    paramsWhere.append(obj.value)
+                    sqlWhere += obj.key + " = ? "
+                }
+                else
+                {
+                    paramsWhere.append(obj.value)
+                    sqlWhere += "and " + obj.key + " = ? "
+                }
+                whereIndex += 1
+            }
+            else
+            {
+                //Create the rest of the update SQL
+                if(index == 0)
+                {
+                    if (obj.value is NSNull)
+                    {
+                        sql += ""
+                        hasNull = true
+                    }
+                    else
+                    {
+                        params.append(obj.value)
+                        sql += obj.key + " = ?"
+                    }
+                }
+                else
+                {
+                    if (obj.value is NSNull)
+                    {
+                        sql += ""
+                    }
+                    else
+                    {
+                        params.append(obj.value)
+                        if(hasNull)
+                        {
+                            hasNull = false
+                            sql +=  obj.key + " = ?"
+                        }
+                        else
+                        {
+                            sql += ", " + obj.key + " = ?"
+                        }
+                    }
+                }
+                index += 1
+            }
+        }
+        sql += sqlWhere
+        params.append(contentsOf:paramsWhere)
+        let sqlParams = ["SQL":sql,"PARAMS":params] as [String : Any]
+        return sqlParams
+    }
+
     //Returns SQL insert statement with Params
     func getSQLInsert() -> Dictionary<String,Any>! {
         let items = getProperties()
@@ -174,6 +249,86 @@ public extension Sqldb {
         return sqlParams
     }
         
+    //Like above but skips Null or nil data in SQL
+    func getSQLInsertValid() -> Dictionary<String,Any>! {
+        let items = getProperties()
+        var params:Array<Any> = []
+        var sql:String = "insert into \(tableName!) ("
+        var index:Int = 0
+        var hasNull: Bool = false
+
+        for array in items {
+            //Get our first and only array element containing our column dictionary
+            let obj = array.first!
+            //Create the column names for the insert SQL
+            if(index == items.count - 1)
+            {
+                if (obj.value is NSNull)
+                {
+                    sql += ""
+                }
+                else
+                {
+                    sql += obj.key
+                }
+            }
+            else
+            {
+                if (obj.value is NSNull)
+                {
+                    sql += ""
+                }
+                else
+                {
+                    sql += obj.key + ","
+                }
+            }
+            index += 1
+        }
+        index = 0
+        sql += ") values("
+        for array in items {
+            //Get our first array element
+            let obj = array.first!
+            //Create the rest of the insert SQL
+            if(index == 0) {
+                if (obj.value is NSNull)
+                {
+                    sql += ""
+                    hasNull = true
+                }
+                else
+                {
+                    params.append(obj.value)
+                    sql += "?"
+                }
+            }
+            else
+            {
+                if (obj.value is NSNull)
+                {
+                    sql += ""
+                }
+                else
+                {
+                    params.append(obj.value)
+                    if(hasNull)
+                    {
+                        sql += "?"
+                    }
+                    else
+                    {
+                        sql += ",?"
+                    }
+                }
+            }
+            index += 1
+        }
+        sql += ")"
+        let sqlParams = ["SQL":sql,"PARAMS":params] as [String : Any]
+        return sqlParams
+    }
+    
     func getProperties() -> [[String: AnyObject]] {
         //Return an Array of one element Array Dictionary so order is preserved.
         //Otherwise returning a Dictionary will result in a random order and
