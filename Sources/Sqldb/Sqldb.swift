@@ -203,13 +203,13 @@ public extension Sqldb {
             //Get our first and only array element containing our column dictionary
             let obj = array.first!
             //Create the column names for the insert SQL
-            if(index == items.count - 1)
+            if(index == 0)
             {
                 sql += obj.key
             }
             else
             {
-                sql += obj.key + ","
+                sql += "," + obj.key
             }
             index += 1
         }
@@ -261,7 +261,7 @@ public extension Sqldb {
             //Get our first and only array element containing our column dictionary
             let obj = array.first!
             //Create the column names for the insert SQL
-            if(index == items.count - 1)
+            if(index == 0)
             {
                 if (obj.value is NSNull)
                 {
@@ -280,7 +280,7 @@ public extension Sqldb {
                 }
                 else
                 {
-                    sql += obj.key + ","
+                    sql += "," + obj.key
                 }
             }
             index += 1
