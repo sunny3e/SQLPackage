@@ -194,13 +194,19 @@ You can also write the SQL Queries if you choose too, but having the Models.swif
 
 ## SQL Transactions
 
-SQLDataAccess supports high performance SQL Transactions. This is where you can literally write 1,000 inserts into the DB all at once, and SQLite will do this very quickly. All Transactions are is an Array of SQL Queries that are append together, and then you execute all of them at once with:
+SQLDataAccess supports high performance SQL Transactions for insert or update along with select SQL statements. This is where you can literally write 1,000 inserts or updates into the DB all at once, and SQLite will do this very quickly. In addition you can perform select Transactions where you can literally query a 1,000 select statements at once and retrieve all the results of this query. All Transactions are is an Array of SQL Queries that are append together, and then you execute all of them at once with:
 
 ```swift
    let status1 = DataManager.dataAccess.executeTransaction(sqlAndParams)
+   OR
+   let dataArray = DataManager.dataAccess.getRecordsForQueryTrans(sqlAndParams)
 ```
 
-The advantage of this is you can literally insert 1,000 Objects at once which is exponentially faster than doing individual inserts back to back. This comes in very handy when your Server API returns a hundred JSON objects that need to be saved in your DB quickly. SQLDataAccess spends no more than a few hundred milliseconds writing all that data into the DB, rather than seconds if you were to do them individually.
+The advantage of this is you can literally insert, update, or select 1,000 Objects at once which is exponentially faster than doing individual inserts, updates or selects back to back. This comes in very handy when your Server API returns a hundred JSON objects that need to be saved in your DB quickly, or you're querying a 100 selects and displaying these Objects in a View. SQLDataAccess spends no more than a few hundred milliseconds writing all that data into the DB, rather than seconds if you were to do them individually.
+
+The executeStatementSQL and getRecordsForQuerySQL will take a regular SQL Query with Parameters and output sqlAndParams Array's that can be appended too and consumed by executeTransaction or getRecordsForQueryTrans.
+
+The power of Transactions give's SQLite high performance capabilities.
 
 ## Simple SQL Queries
 
