@@ -296,6 +296,22 @@ public class SQLDataAccess: NSObject {
         return status
     }
     
+    public func executeStatementSQL(_ query: String!, _ args:Any...) -> Dictionary<String,Any>! {
+        //Create SQL & Params Dictionary for executeStatement for Transactions
+        let params:Array<Any> = args
+        let sql:String = query
+        let sqlParams = ["SQL":sql,"PARAMS":params] as [String : Any]
+        return sqlParams
+    }
+    
+    public func getRecordsForQuerySQL(_ query: String!, _ args:Any...) -> Dictionary<String,Any>! {
+        //Create SQL & Params Dictionary for getRecordsForQuery for Transactions
+        let params:Array<Any> = args
+        let sql:String = query
+        let sqlParams = ["SQL":sql,"PARAMS":params] as [String : Any]
+        return sqlParams
+    }
+    
     @discardableResult public func executeStatement(_ query: String, withParams parameters: Array<Any>!) -> Bool {
         
         var status : Bool = false
@@ -461,6 +477,92 @@ public class SQLDataAccess: NSObject {
                 log.errorMessage("DA : SQL Error getRecords : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query!)\n");
             }
             sqlite3_finalize(ps)
+        }
+        return results //queue.sync {results}
+    }
+    
+    public func getRecordsForQueryTrans(_ sqlAndParamsForTransaction: Array<[String:Any]>!) -> Array<[String:Any]> {
+        //Returns an Array of Dictionaries for a Transaction
+        //Using this you can append hundreds 'select' statements and execute all of them at once
+        //You can create these transactions using getRecordsForQuerySQL
+        var results = [[String:Any]]()
+
+        if(sqlite3dbConn == nil)
+        {
+            return results
+        }
+        queue.sync {
+            //Synchronize all accesses
+            for i in 0..<sqlAndParamsForTransaction.count {
+
+                var ps:OpaquePointer? = nil
+                sqlite3_exec(sqlite3dbConn, "BEGIN EXCLUSIVE TRANSACTION", nil, nil, nil)
+                let query = sqlAndParamsForTransaction[i][SQL] as! String
+                let parameters = sqlAndParamsForTransaction[i][PARAMS] as! Array<Any>
+                
+                if let ps = self.stmt(&ps, forQuery:query, withParams:parameters)
+                {
+                    let columnCount = sqlite3_column_count(ps)
+                    var result = Dictionary<String,AnyObject>()
+                    while sqlite3_step(ps) == SQLITE_ROW
+                    {
+                        for i in 0..<columnCount
+                        {
+                            let columnType = self.getColumnType(ps,i)
+                            let name = sqlite3_column_name(ps,i)
+                            switch columnType {
+                            case SQLITE_INTEGER:
+                                result[String(validatingUTF8: name!)!] = Int64(sqlite3_column_int64(ps,i)) as AnyObject?
+                            case SQLITE_FLOAT:
+                                result[String(validatingUTF8: name!)!] = Double(sqlite3_column_double(ps,i)) as AnyObject?
+                            case SQLITE_TEXT:
+                                if let ptr = UnsafeRawPointer.init(sqlite3_column_text(ps,i)) {
+                                    let uptr = ptr.bindMemory(to:CChar.self, capacity:0)
+                                    result[String(validatingUTF8: name!)!] = String(validatingUTF8:uptr) as AnyObject?
+                                }
+                            case SQLITE_BLOB:
+                                result[String(validatingUTF8: name!)!] = NSData(bytes:sqlite3_column_blob(ps,i), length:Int(sqlite3_column_bytes(ps,i))) as AnyObject?
+                            case SQLITE_NULL:
+                                result[String(validatingUTF8: name!)!] = String(validatingUTF8:"") as AnyObject?
+                            case SQLITE_DATE:
+                                //Our defined DATE
+                                if let ptr = UnsafeRawPointer.init(sqlite3_column_text(ps,i)) {
+                                    let uptr = ptr.bindMemory(to:CChar.self, capacity:0)
+                                    let dateStr = String(validatingUTF8:uptr)
+                                    let set = CharacterSet(charactersIn:"-:")
+                                    if dateStr?.rangeOfCharacter(from:set) != nil {
+                                        // Convert to time
+                                        var time:tm = tm(tm_sec: 0, tm_min: 0, tm_hour: 0, tm_mday: 0, tm_mon: 0, tm_year: 0, tm_wday: 0, tm_yday: 0, tm_isdst: 0, tm_gmtoff: 0, tm_zone:nil)
+                                        strptime(dateStr, "%Y-%m-%d %H:%M:%S", &time)
+                                        time.tm_isdst = -1
+                                        let diff = TimeZone.current.secondsFromGMT()
+                                        let t = mktime(&time) + diff
+                                        let ti = TimeInterval(t)
+                                        let date = Date(timeIntervalSince1970:ti)
+                                        result[String(validatingUTF8: name!)!] = date as AnyObject?
+                                    }
+                                    else
+                                    {
+                                        log.errorMessage("DA : SQL Error getRecords Invalid Date ")
+                                    }
+                                }
+                            default:
+                                log.errorMessage("DA : SQL Error getRecords Invalid column type")
+                            }
+                        }
+                        results.append(result)
+                    }
+                }
+                else
+                {
+                    let errMsg = String(validatingUTF8:sqlite3_errmsg(sqlite3dbConn))
+                    let errCode = Int(sqlite3_errcode(sqlite3dbConn))
+                    log.errorMessage("DA : SQL Error getRecords : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query)\n");
+                    sqlite3_exec(sqlite3dbConn, "ROLLBACK", nil, nil, nil)
+                }
+                sqlite3_finalize(ps)
+                sqlite3_exec(sqlite3dbConn, "COMMIT TRANSACTION", nil, nil, nil)
+            }
         }
         return results //queue.sync {results}
     }
