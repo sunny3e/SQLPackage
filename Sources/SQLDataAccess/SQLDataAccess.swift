@@ -440,9 +440,9 @@ public class SQLDataAccess: NSObject {
             if let ps = self.stmt(&ps, forQuery:query, withParams:parameters)
             {
                 let columnCount = sqlite3_column_count(ps)
-                var result = Dictionary<String,AnyObject>()
                 while sqlite3_step(ps) == SQLITE_ROW
                 {
+                    var result = Dictionary<String,AnyObject>()
                     for i in 0..<columnCount
                     {
                         let columnType = self.getColumnType(ps,i)
@@ -523,9 +523,9 @@ public class SQLDataAccess: NSObject {
                 if let ps = self.stmt(&ps, forQuery:query, withParams:parameters)
                 {
                     let columnCount = sqlite3_column_count(ps)
-                    var result = Dictionary<String,AnyObject>()
                     while sqlite3_step(ps) == SQLITE_ROW
                     {
+                        var result = Dictionary<String,AnyObject>()
                         for i in 0..<columnCount
                         {
                             let columnType = self.getColumnType(ps,i)
