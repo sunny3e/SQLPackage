@@ -182,6 +182,12 @@ public class SQLDataAccess: NSObject {
         return rollBack
     }
     
+    public func getVersion() -> Int64
+    {
+        let sqliteVersion = sqlite3_libversion_number()
+        return Int64(sqliteVersion)
+    }
+    
     public func dbEncrypt(_ key:String)
     {
         let sql1 = String(format:"ft67s%@58uy%@fge4",EN_KEY,key)
