@@ -26,6 +26,13 @@ public protocol Sqldb {
     func getTableDescription() -> String
 }
 
+extension String {
+    func contains(word : String) -> Bool
+    {
+        return self.range(of: "\\b\(word)\\b", options: .regularExpression) != nil
+    }
+}
+
 public extension Sqldb {
     
     var sortAlpha:Bool {
@@ -70,7 +77,7 @@ public extension Sqldb {
             //Get our first and only array element containing our column dictionary
             let obj = array.first!
             //Create the where clause for update
-            if (whereItems.contains(obj.key)) {
+            if (whereItems.contains(word: obj.key)) {
                 if(whereIndex == 0)
                 {
                     paramsWhere.append(obj.value)
@@ -134,7 +141,7 @@ public extension Sqldb {
             //Get our first and only array element containing our column dictionary
             let obj = array.first!
             //Create the where clause for update
-            if (whereItems.contains(obj.key)) {
+            if (whereItems.contains(word: obj.key)) {
                 if(whereIndex == 0)
                 {
                     paramsWhere.append(obj.value)
