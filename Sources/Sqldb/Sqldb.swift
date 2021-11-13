@@ -23,6 +23,7 @@ public protocol Sqldb {
     func getSQLInsertValid() -> Dictionary<String,Any>!
     func getSQLUpdate(whereItems:String) -> Dictionary<String,Any>!
     func getSQLUpdateValid(whereItems:String) -> Dictionary<String,Any>!
+    func getSQLUpsertValid(whereItems:String,forId:String) -> Dictionary<String,Any>!
     func getTableDescription() -> String
 }
 
@@ -332,6 +333,155 @@ public extension Sqldb {
             index += 1
         }
         sql += ")"
+        let sqlParams = ["SQL":sql,"PARAMS":params] as [String : Any]
+        return sqlParams
+    }
+    
+    //Like above but skips Null or nil data in SQL
+    //Creates an upsert command so you can insert or update in one call without doing a lookup to determine which to use
+    //So execution times on this are much faster due to not needing lookup query's
+    //Combines insert into with on conflict do update for an upsert
+    //creates a 2X size params Array since insert verses update has different params values
+    func getSQLUpsertValid(whereItems:String,forId:String) -> Dictionary<String,Any>! {
+        let items = getProperties()
+        var params:Array<Any> = []
+        var sql:String = "insert into \(tableName!) ("
+        var sqlWhere:String = " where "
+        var paramsWhere:Array<Any> = []
+        var index:Int = 0
+        var whereIndex:Int = 0
+        var hasNull: Bool = false
+
+        for array in items {
+            //Get our first and only array element containing our column dictionary
+            let obj = array.first!
+            //Create the column names for the insert SQL
+            if(index == 0)
+            {
+                if (obj.value is NSNull)
+                {
+                    sql += ""
+                }
+                else
+                {
+                    sql += obj.key
+                }
+            }
+            else
+            {
+                if (obj.value is NSNull)
+                {
+                    sql += ""
+                }
+                else
+                {
+                    sql += "," + obj.key
+                }
+            }
+            index += 1
+        }
+        index = 0
+        sql += ") values("
+        for array in items {
+            //Get our first array element
+            let obj = array.first!
+            //Create the rest of the insert SQL
+            if(index == 0) {
+                if (obj.value is NSNull)
+                {
+                    sql += ""
+                    hasNull = true
+                }
+                else
+                {
+                    params.append(obj.value)
+                    sql += "?"
+                }
+            }
+            else
+            {
+                if (obj.value is NSNull)
+                {
+                    sql += ""
+                }
+                else
+                {
+                    params.append(obj.value)
+                    if(hasNull)
+                    {
+                        sql += "?"
+                    }
+                    else
+                    {
+                        sql += ",?"
+                    }
+                }
+            }
+            index += 1
+        }
+        sql += ") "
+        //Add our Id which must be indexed and unique to work
+        sql += "on conflict(" + forId + ") do update  set "
+        index = 0
+        //Now add update and where clause
+        for array in items {
+            //Get our first and only array element containing our column dictionary
+            let obj = array.first!
+            //Create the where clause for update
+            if (whereItems.contains(word: obj.key)) {
+                if(whereIndex == 0)
+                {
+                    paramsWhere.append(obj.value)
+                    sqlWhere += obj.key + " = ? "
+                }
+                else
+                {
+                    paramsWhere.append(obj.value)
+                    sqlWhere += "and " + obj.key + " = ? "
+                }
+                whereIndex += 1
+            }
+            else
+            {
+                //Create the rest of the update SQL
+                if(index == 0)
+                {
+                    if (obj.value is NSNull)
+                    {
+                        sql += ""
+                        hasNull = true
+                    }
+                    else
+                    {
+                        params.append(obj.value)
+                        sql += obj.key + " = ?"
+                    }
+                }
+                else
+                {
+                    if (obj.value is NSNull)
+                    {
+                        sql += ""
+                    }
+                    else
+                    {
+                        params.append(obj.value)
+                        if(hasNull)
+                        {
+                            hasNull = false
+                            sql +=  obj.key + " = ?"
+                        }
+                        else
+                        {
+                            sql += ", " + obj.key + " = ?"
+                        }
+                    }
+                }
+                index += 1
+            }
+        }
+        sql += sqlWhere
+        params.append(contentsOf:paramsWhere)
         let sqlParams = ["SQL":sql,"PARAMS":params] as [String : Any]
         return sqlParams
     }

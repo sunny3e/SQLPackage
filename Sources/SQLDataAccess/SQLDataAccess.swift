@@ -21,15 +21,15 @@ public class SQLDataAccess: NSObject {
     private var path:String!
     private let DB_Queue = "SQLiteQueue"
     private var queue:DispatchQueue!
+    private let bgQueue = DispatchQueue(label: "com.SQLiteQueue.BG", qos: .background, attributes: .concurrent)
     private var sqlite3dbConn:OpaquePointer? = nil
     private let db_format = DateFormatter()
     private let SQLITE_DATE = SQLITE_NULL + 1
     private let SQLITE_STATIC = unsafeBitCast(0, to:sqlite3_destructor_type.self)
     private let SQLITE_TRANSIENT = unsafeBitCast(-1, to:sqlite3_destructor_type.self)
     private let EN_KEY = "45763887E33478287EFFEB42890CD1EF"
-    //private var logger = Logger(label: "DA")
     public var rollBack:Bool = false
-    
+
     class Modifier: LogModifier {
         func modifyMessage(_ message: String, with logLevel: LogLevel) -> String {
             return "DA : \(message)"
@@ -138,7 +138,10 @@ public class SQLDataAccess: NSObject {
         }
         // Open the DB
         let cpath = path.cString(using:String.Encoding.utf8)
-        let error = sqlite3_open(cpath!, &sqlite3dbConn)
+        //let error = sqlite3_open(cpath!, &sqlite3dbConn)
+        //We use Full Mutex so we can process on background concurrent dispatch queues for execution speed
+        //All methods with a BG after their method call use this bgQueue
+        let error = sqlite3_open_v2(cpath!, &sqlite3dbConn, SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX, nil)
         if error != SQLITE_OK {
             // Open failed, close DB and fail
             log.errorMessage(" - failed to open \(DB_FILE)!")
@@ -374,6 +377,44 @@ public class SQLDataAccess: NSObject {
         }
         return status //queue.sync {status}
     }
+    
+    //Back Ground Queue
+    @discardableResult public func executeStatementBG(_ query: String, withParams parameters: Array<Any>!) -> Bool {
+        
+        var status : Bool = false
+        
+        if(sqlite3dbConn == nil)
+        {
+            return status
+        }
+        
+        bgQueue.sync {
+            //Synchronize all accesses
+            var ps:OpaquePointer? = nil
+            
+            if let ps = self.stmt(&ps, forQuery:query, withParams:parameters) {
+                let code = sqlite3_step(ps)
+                if(code == SQLITE_DONE)
+                {
+                    status = true
+                }
+                else
+                {
+                    status = false
+                }
+                
+                if( !status )
+                {
+                    let errMsg = String(validatingUTF8:sqlite3_errmsg(sqlite3dbConn))
+                    let errCode = Int(sqlite3_errcode(sqlite3dbConn))
+                    log.errorMessage(" : SQL Error during execute : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query)\n");
+                }
+            }
+            sqlite3_finalize(ps)
+            sqlite3_exec(sqlite3dbConn, "COMMIT TRANSACTION", nil, nil, nil)
+        }
+        return status //queue.sync {status}
+    }
 
     public func getRecordsForQuery(_ query: String!, _ args:Any...) -> Array<Any> {
         
@@ -387,6 +428,19 @@ public class SQLDataAccess: NSObject {
         return results
     }
 
+    //Back Ground Queue
+    public func getRecordsForQueryBG(_ query: String!, _ args:Any...) -> Array<Any> {
+        
+        var results = [Any]()
+        if(sqlite3dbConn == nil)
+        {
+            return results
+        }
+        
+        results = self.getRecordsForQueryBG(query, withParams: args)
+        return results
+    }
+    
     private func getColumnType(_ ps:OpaquePointer,_ index:CInt)->CInt {
         var type:CInt = 0
         // Column types - http://www.sqlite.org/datatype3.html (section 2.2 table column 1)
@@ -440,6 +494,83 @@ public class SQLDataAccess: NSObject {
             return results
         }
         queue.sync {
+
+            //Synchronize all accesses
+            var ps:OpaquePointer? = nil
+            if let ps = self.stmt(&ps, forQuery:query, withParams:parameters)
+            {
+                let columnCount = sqlite3_column_count(ps)
+                while sqlite3_step(ps) == SQLITE_ROW
+                {
+                    var result = Dictionary<String,AnyObject>()
+                    for i in 0..<columnCount
+                    {
+                        let columnType = self.getColumnType(ps,i)
+                        let name = sqlite3_column_name(ps,i)
+                        switch columnType {
+                        case SQLITE_INTEGER:
+                            result[String(validatingUTF8: name!)!] = Int64(sqlite3_column_int64(ps,i)) as AnyObject?
+                        case SQLITE_FLOAT:
+                            result[String(validatingUTF8: name!)!] = Double(sqlite3_column_double(ps,i)) as AnyObject?
+                        case SQLITE_TEXT:
+                            if let ptr = UnsafeRawPointer.init(sqlite3_column_text(ps,i)) {
+                                let uptr = ptr.bindMemory(to:CChar.self, capacity:0)
+                                result[String(validatingUTF8: name!)!] = String(validatingUTF8:uptr) as AnyObject?
+                            }
+                        case SQLITE_BLOB:
+                            result[String(validatingUTF8: name!)!] = NSData(bytes:sqlite3_column_blob(ps,i), length:Int(sqlite3_column_bytes(ps,i))) as AnyObject?
+                        case SQLITE_NULL:
+                            result[String(validatingUTF8: name!)!] = String(validatingUTF8:"") as AnyObject?
+                        case SQLITE_DATE:
+                            //Our defined DATE
+                            if let ptr = UnsafeRawPointer.init(sqlite3_column_text(ps,i)) {
+                                let uptr = ptr.bindMemory(to:CChar.self, capacity:0)
+                                let dateStr = String(validatingUTF8:uptr)
+                                let set = CharacterSet(charactersIn:"-:")
+                                if dateStr?.rangeOfCharacter(from:set) != nil {
+                                    // Convert to time
+                                    var time:tm = tm(tm_sec: 0, tm_min: 0, tm_hour: 0, tm_mday: 0, tm_mon: 0, tm_year: 0, tm_wday: 0, tm_yday: 0, tm_isdst: 0, tm_gmtoff: 0, tm_zone:nil)
+                                    strptime(dateStr, "%Y-%m-%d %H:%M:%S", &time)
+                                    //time.tm_isdst = -1
+                                    let diff = TimeZone.current.secondsFromGMT()
+                                    let t = mktime(&time) + diff
+                                    let ti = TimeInterval(t)
+                                    let date = Date(timeIntervalSince1970:ti)
+                                    result[String(validatingUTF8: name!)!] = date as AnyObject?
+                                }
+                                else
+                                {
+                                    log.errorMessage(" : SQL Error getRecords Invalid Date ")
+                                }
+                            }
+                        default:
+                            log.errorMessage(" : SQL Error getRecords Invalid column type")
+                        }
+                    }
+                    results.append(result)
+                }
+            }
+            else
+            {
+                let errMsg = String(validatingUTF8:sqlite3_errmsg(sqlite3dbConn))
+                let errCode = Int(sqlite3_errcode(sqlite3dbConn))
+                log.errorMessage(" : SQL Error getRecords : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query!)\n");
+            }
+            sqlite3_finalize(ps)
+        }
+        return results //queue.sync {results}
+    }
+    
+    //Back Ground Queue
+    public func getRecordsForQueryBG(_ query: String!, withParams parameters: Array<Any>!) -> Array<[String:Any]> {
+        //Returns an Array of Dictionaries
+        var results = [[String:Any]]()
+
+        if(sqlite3dbConn == nil)
+        {
+            return results
+        }
+        bgQueue.sync {
 
             //Synchronize all accesses
             var ps:OpaquePointer? = nil
@@ -606,6 +737,54 @@ public class SQLDataAccess: NSObject {
         }
         
         queue.sync {
+            //Synchronize all accesses
+            for i in 0..<sqlAndParamsForTransaction.count {
+
+                var ps:OpaquePointer? = nil
+                sqlite3_exec(sqlite3dbConn, "BEGIN EXCLUSIVE TRANSACTION", nil, nil, nil)
+                let query = sqlAndParamsForTransaction[i][SQL] as! String
+                let parameters = sqlAndParamsForTransaction[i][PARAMS] as! Array<Any>
+
+                if let ps = self.stmt(&ps, forQuery:query, withParams:parameters) {
+                    let code = sqlite3_step(ps)
+                    if(code == SQLITE_DONE)
+                    {
+                        status = true
+                    }
+                    else
+                    {
+                        status = false
+                    }
+                    
+                    if( !status )
+                    {
+                        let errMsg = String(validatingUTF8:sqlite3_errmsg(sqlite3dbConn))
+                        let errCode = Int(sqlite3_errcode(sqlite3dbConn))
+                        log.errorMessage(" : SQL Error during executeTransaction : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query)\n");
+                        if(rollBack)
+                        {
+                            sqlite3_exec(sqlite3dbConn, "ROLLBACK", nil, nil, nil)
+                        }
+                    }
+                }
+                sqlite3_finalize(ps)
+                sqlite3_exec(sqlite3dbConn, "COMMIT TRANSACTION", nil, nil, nil)
+            }
+        }
+        return status
+    }
+    
+    //Back Ground Queue
+    @discardableResult public func executeTransactionBG(_ sqlAndParamsForTransaction: Array<[String:Any]>!) -> Bool {
+        
+        var status : Bool = true
+        
+        if(sqlite3dbConn == nil)
+        {
+            return status
+        }
+        
+        bgQueue.sync {
             //Synchronize all accesses
             for i in 0..<sqlAndParamsForTransaction.count {
 
