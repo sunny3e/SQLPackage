@@ -104,6 +104,10 @@ struct AppInfo: Codable,Sqldb,Mappable {
 ### Create Your Models 
   
   You will also need to create a Models.swift struct which creates your SQL functions for AppInfo. InsertAppInfoSQL automatically creates the insert SQL & PARAMS Dictionary for you by using the Sqldb.getSQLInsert() method. The same goes for updateAppInfoSQL. Both these methods insert or update Null or Nil data. If you want the SQL to skip over Null or Nil data in the SQL & PARAMS use the sqldb.getSQLInsertValid() or sqldb.getSQLUpdateValid methods, and only valid data will be inserted or updated. The function Models.getAppInfo reads the DB and returns SQL & PARAMS Dictionary and then Maps this to the AppInfo struct by using dbDecode method, and does this in just 7 lines of code for any structure.
+  
+  The Sqldb package creates the SQL for update, insert, and upsert for you automatically so you don't need to write the SQL for these common queries. An updateValid, insertValid, and upsertValid checks the vars or parameters in your query, and if the values are unknown or nil then the update does not change the values in the existing table thus retaining prior values all ready written into the DB. 
+  
+  To use these Sqldb methods to generate your SQL queries automatically, just call them on your Codable model as : getSQLInsert(), getSQLInsertValid(), getSQLUpdate(whereItems:), getSQLUpdateValid(whereItems:), getSQLUpsertValid(whereItems:,forId:). Upsert is explained more later in this document.
  
  ```swift
 import Foundation
@@ -207,6 +211,9 @@ The advantage of this is you can literally insert, update, or select 1,000 Objec
 The executeStatementSQL and getRecordsForQuerySQL will take a regular SQL Query with Parameters and output sqlAndParams Array's that can be appended too and consumed by executeTransaction or getRecordsForQueryTrans.
 
 The power of Transactions give's SQLite high performance capabilities.
+
+## Back Ground Concurrent Processes
+SQLDataAccess supports synchronous inserts or updates, and can also perform writes on background concurrent threads into SQLite, this can speed up writing into the DB for transactions or inserts or updates, just call any of the DataAccess methods with a '**BG**' after the method name in order to execute these methods. These background methods can dramatically speed up the writing of the data into SQLite for large amounts of data.
 
 ## Simple SQL Queries
 
