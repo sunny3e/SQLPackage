@@ -212,6 +212,12 @@ The power of Transactions give's SQLite high performance capabilities.
 
 When you write your SQL Queries as a String, all the terms that follow are in a variadic argument list of type Any, and your parameters are in an Array. All these terms are separated by commas in your list of SQL arguments. You can enter Strings, Integers, Date’s, and Blobs right after the sequel statement since all of these terms are considered to be parameters for the SQL. The variadic argument array just makes it convenient to enter all your sequel in just one executeStatement or getRecordsForQuery call. If you don’t have any parameters, don’t enter anything after your SQL.
 
+## Upsert Capability For High Performance
+
+Usually in order for you to insert or update the SQLite DB, you need to know if the data already exists in the DB or not. As such you usually execute a SQL query to determine if the data exists, if it does you do an update, if it doesn't you then do an insert. When fetching lots of data from a Server where megabytes of JSON comes down and then needs to be written into the DB, the SQL queury to determine if it exists or not can become expensive performance wise. To get around this issue SQLite supports Upsert which is really just an Insert followed by an On Conflict(id) Do Update SQL Query. The On Conflict statement needs an index column that is unique in order to work, a column like id will work. Using the Upsert command you now don't need a separate lookup anymore, and your Codable Model can just parse the JSON and then write it directly into the DB using the Upsert command. The Sqldb package will create the SQL for you for the Upsert command, simply call Sqldb : getSQLUpsertValid(whereItems:ForId) where the ForId is the column that is indexed and has to be unique.
+
+Using Upsert you can see a 2X performance speed up for inserting or updating large amounts of data into SQLite.
+
 ## Data Types SQLDataAccess Supports
 
 The results array is an Array of Dictionary’s where the ‘key’ is your tables column name, and the ‘value’ is your data obtained from SQLite. You can easily iterate through this array with a for loop or print it out directly or assign these Dictionary elements to custom data object Classes that you use in your View Controllers for model consumption.
