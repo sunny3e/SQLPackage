@@ -18,6 +18,7 @@ public class SQLDataAccess: NSObject {
     
     static let shared = SQLDataAccess()
     var DB_FILE = "SQLite.db"
+    let SQLITE_DB_CORRUPTED = Notification.Name("SQLITE_DB_CORRUPTED")
     private var path:String!
     private let DB_Queue = "SQLiteQueue"
     private var queue:DispatchQueue!
@@ -369,6 +370,10 @@ public class SQLDataAccess: NSObject {
                 {
                     let errMsg = String(validatingUTF8:sqlite3_errmsg(sqlite3dbConn))
                     let errCode = Int(sqlite3_errcode(sqlite3dbConn))
+                    if(errCode == SQLITE_CORRUPT)
+                    {
+                        NotificationCenter.default.post(name: SQLITE_DB_CORRUPTED, object: nil)
+                    }
                     log.errorMessage(" : SQL Error during execute : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query)\n");
                 }
             }
@@ -407,6 +412,10 @@ public class SQLDataAccess: NSObject {
                 {
                     let errMsg = String(validatingUTF8:sqlite3_errmsg(sqlite3dbConn))
                     let errCode = Int(sqlite3_errcode(sqlite3dbConn))
+                    if(errCode == SQLITE_CORRUPT)
+                    {
+                        NotificationCenter.default.post(name: SQLITE_DB_CORRUPTED, object: nil)
+                    }
                     log.errorMessage(" : SQL Error during execute : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query)\n");
                 }
             }
@@ -760,6 +769,10 @@ public class SQLDataAccess: NSObject {
                     {
                         let errMsg = String(validatingUTF8:sqlite3_errmsg(sqlite3dbConn))
                         let errCode = Int(sqlite3_errcode(sqlite3dbConn))
+                        if(errCode == SQLITE_CORRUPT)
+                        {
+                            NotificationCenter.default.post(name: SQLITE_DB_CORRUPTED, object: nil)
+                        }
                         log.errorMessage(" : SQL Error during executeTransaction : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query)\n");
                         if(rollBack)
                         {
@@ -808,6 +821,10 @@ public class SQLDataAccess: NSObject {
                     {
                         let errMsg = String(validatingUTF8:sqlite3_errmsg(sqlite3dbConn))
                         let errCode = Int(sqlite3_errcode(sqlite3dbConn))
+                        if(errCode == SQLITE_CORRUPT)
+                        {
+                            NotificationCenter.default.post(name: SQLITE_DB_CORRUPTED, object: nil)
+                        }
                         log.errorMessage(" : SQL Error during executeTransaction : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query)\n");
                         if(rollBack)
                         {
