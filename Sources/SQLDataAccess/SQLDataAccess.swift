@@ -374,7 +374,7 @@ public class SQLDataAccess: NSObject {
                     {
                         NotificationCenter.default.post(name: SQLITE_DB_CORRUPTED, object: nil)
                     }
-                    log.errorMessage(" : SQL Error during execute : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query)\n");
+                    log.errorMessage(" : SQL Error during execute : Err[\(errCode)] = \(String(describing: errMsg!)) : \nQ = \(query)\n : \nP = \(parameters)\n");
                 }
             }
             sqlite3_finalize(ps)
@@ -416,7 +416,7 @@ public class SQLDataAccess: NSObject {
                     {
                         NotificationCenter.default.post(name: SQLITE_DB_CORRUPTED, object: nil)
                     }
-                    log.errorMessage(" : SQL Error during execute : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query)\n");
+                    log.errorMessage(" : SQL Error during execute : Err[\(errCode)] = \(String(describing: errMsg!)) : \nQ = \(query)\n : \nP = \(parameters)\n");
                 }
             }
             sqlite3_finalize(ps)
@@ -773,7 +773,7 @@ public class SQLDataAccess: NSObject {
                         {
                             NotificationCenter.default.post(name: SQLITE_DB_CORRUPTED, object: nil)
                         }
-                        log.errorMessage(" : SQL Error during executeTransaction : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query)\n");
+                        log.errorMessage(" : SQL Error during executeTransaction : Err[\(errCode)] = \(String(describing: errMsg!)) : \nQ = \(query)\n : \nP = \(parameters)\n");
                         if(rollBack)
                         {
                             sqlite3_exec(sqlite3dbConn, "ROLLBACK", nil, nil, nil)
@@ -825,7 +825,7 @@ public class SQLDataAccess: NSObject {
                         {
                             NotificationCenter.default.post(name: SQLITE_DB_CORRUPTED, object: nil)
                         }
-                        log.errorMessage(" : SQL Error during executeTransaction : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query)\n");
+                        log.errorMessage(" : SQL Error during executeTransaction : Err[\(errCode)] = \(String(describing: errMsg!)) : \nQ = \(query)\n : \nP = \(parameters)\n");
                         if(rollBack)
                         {
                             sqlite3_exec(sqlite3dbConn, "ROLLBACK", nil, nil, nil)
