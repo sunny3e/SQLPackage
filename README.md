@@ -127,34 +127,83 @@ struct Models {
     }
     
     // MARK: - AppInfo
-    static func insertAppInfoSQL(_ appInfo:AppInfo) -> Dictionary<String,Any>
+    static func insertAppInfoSQL(_ obj:AppInfo) -> Dictionary<String,Any>
     {
         //Let Sqldb create the SQL insert syntax for us
         //creates SQL : insert into AppInfo (name,value,descript,date,blob) values(?,?,?,?,?)
-        let sqlParams = appInfo.getSQLInsert()!
+        let sqlParams = obj.getSQLInsert()!
         log.debug("insertAppInfoSQL : sqlParams = \(sqlParams) ")
         return sqlParams
     }
     
-    @discardableResult static func insertAppInfo(_ appInfo:AppInfo) -> Bool
+    @discardableResult static func insertAppInfo(_ obj:AppInfo) -> Bool
     {
-        let sqlParams = self.insertAppInfoSQL(appInfo)
+        let sqlParams = self.insertAppInfoSQL(obj)
         let status = DataManager.dataAccess.executeStatement(sqlParams[SQL] as! String, withParams: sqlParams[PARAMS] as! Array<Any>)
         return status
     }
     
-    static func updateAppInfoSQL(_ appInfo:AppInfo) -> Dictionary<String,Any>
+    static func insertAppInfoValidSQL(_ obj:AppInfo) -> Dictionary<String,Any>
+    {
+        //Let Sqldb create the SQL insert syntax for us
+        //creates SQL : insert into AppInfo (name,value,descript,date,blob) values(?,?,?,?,?)
+        let sqlParams = obj.getSQLInsertValid()!
+        log.debug("insertAppInfoValidSQL : sqlParams = \(sqlParams) ")
+        return sqlParams
+    }
+    
+    @discardableResult static func insertAppInfoValid(_ obj:AppInfo) -> Bool
+    {
+        let sqlParams = self.insertAppInfoValidSQL(obj)
+        let status = DataManager.dataAccess.executeStatement(sqlParams[SQL] as! String, withParams: sqlParams[PARAMS] as! Array<Any>)
+        return status
+    }
+    
+    static func updateAppInfoSQL(_ obj:AppInfo) -> Dictionary<String,Any>
     {
         //Let Sqldb create the SQL update syntax for us
         //creates SQL : update AppInfo set value = ?, descrip = ?, data = ?, blob = ? where name = ?
-        let sqlParams = appInfo.getSQLUpdate(whereItems:"name")!
+        let sqlParams = obj.getSQLUpdate(whereItems:"name")!
         log.debug("updateAppInfoSQL : sqlParams = \(sqlParams) ")
         return sqlParams
     }
     
-    @discardableResult static func updateAppInfo(_ appInfo:AppInfo) -> Bool
+    @discardableResult static func updateAppInfo(_ obj:AppInfo) -> Bool
     {
-        let sqlParams = self.updateAppInfoSQL(appInfo)
+        let sqlParams = self.updateAppInfoSQL(obj)
+        let status = DataManager.dataAccess.executeStatement(sqlParams[SQL] as! String, withParams: sqlParams[PARAMS] as! Array<Any>)
+        return status
+    }
+    
+    static func updateAppInfoValidSQL(_ obj:AppInfo) -> Dictionary<String,Any>
+    {
+        //Let Sqldb create the SQL update syntax for us
+        //creates SQL : update AppInfo set value = ?, descrip = ?, data = ?, blob = ? where name = ?
+        let sqlParams = obj.getSQLUpdateValid(whereItems:"name")!
+        log.debug("updateAppInfoSQL : sqlParams = \(sqlParams) ")
+        return sqlParams
+    }
+    
+    @discardableResult static func updateAppInfoValid(_ obj:AppInfo) -> Bool
+    {
+        let sqlParams = self.updateAppInfoValidSQL(obj)
+        let status = DataManager.dataAccess.executeStatement(sqlParams[SQL] as! String, withParams: sqlParams[PARAMS] as! Array<Any>)
+        return status
+    }
+    
+    static func upsertAppInfoValidSQL(_ obj:AppInfo) -> Dictionary<String,Any>
+    {
+        //Let Sqldb create the SQL upsert syntax for us
+	//creates update or insert SQL : insert into AppInfo (name,value,descript,date,blob) values(?,?,?,?,?) on conflict(id) do update set 
+	//value = ?, descrip = ?, data = ?, blob = ? where name = ?
+        let sqlParams = obj.getSQLUpsertValid(whereItems:"name",forId:"id")!
+        log.debug("upsertAppInfoValidSQL : sqlParams = \(sqlParams) ")
+        return sqlParams
+    }
+    
+    @discardableResult static func upsertAppInfoValid(_ obj:AppInfo) -> Bool
+    {
+        let sqlParams = self.upsertAppInfoValidSQL(obj)
         let status = DataManager.dataAccess.executeStatement(sqlParams[SQL] as! String, withParams: sqlParams[PARAMS] as! Array<Any>)
         return status
     }
