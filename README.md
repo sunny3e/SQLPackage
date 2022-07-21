@@ -284,7 +284,7 @@ For Blobs you can store ***binary, varbinary, blob.***
 
 For Text you can store ***char, character, clob, national varying character, native character, nchar, nvarchar, varchar, variant, varying character, text***.
 
-For Dates you can store ***datetime, time, timestamp, date.*** No need to convert Dates to Strings and back and forth, SQLDataAccess does all that for you!
+For Dates you can store ***datetime, time, timestamp, date.*** No need to convert Dates to Strings and back and forth, SQLDataAccess does all that for you! Dates are always stored as UTC in the DB and day light savings time is also taken into account for the local you are in.
 
 For Integers you can store ***bigint, bit, bool, boolean, int2, int8, integer, mediumint, smallint, tinyint, int.***
 
