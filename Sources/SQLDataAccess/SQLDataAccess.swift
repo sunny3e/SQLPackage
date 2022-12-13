@@ -18,6 +18,7 @@ public class SQLDataAccess: NSObject {
     
     static let shared = SQLDataAccess()
     var DB_FILE = "SQLite.db"
+    var DB2_FILE = "SQLite2.db"
     let SQLITE_DB_CORRUPTED = Notification.Name("SQLITE_DB_CORRUPTED")
     private var path:String!
     private let DB_Queue = "SQLiteQueue"
@@ -70,6 +71,27 @@ public class SQLDataAccess: NSObject {
     public func setDBName(name:String)
     {
         DB_FILE = name
+    }
+    
+    @objc public func getDB2Name() -> String
+    {
+        return DB2_FILE
+    }
+    
+    public func setDB2Name(name:String)
+    {
+        DB2_FILE = name
+    }
+    
+    @objc public func getDB2Path() -> String
+    {
+        return self.pathForFileWithName(fileName: self.DB2_FILE)
+    }
+    
+    public func createDB2()
+    {
+        let status = self.moveDBtoDocumentDirectoryForName(DB_FILE,dbName:DB2_FILE)
+        log.debugMessage("createDB2 : status = \(status)")
     }
     
     public func closeConnection()
@@ -151,7 +173,7 @@ public class SQLDataAccess: NSObject {
         }
         else
         {
-            log.debugMessage(" : \(DB_FILE) opened : path = \(path)")
+            log.debugMessage("\(DB_FILE) opened : path = \(path)")
         }
         
         return true
@@ -255,7 +277,8 @@ public class SQLDataAccess: NSObject {
         
         //Do sanity check on query first to make sure it's Ok
         if let cSql = query.cString(using: String.Encoding.utf8) {
-            code = sqlite3_prepare_v2(sqlite3dbConn, cSql, CInt(query.lengthOfBytes(using: String.Encoding.utf8)), &ps, nil)
+            //code = sqlite3_prepare_v2(sqlite3dbConn, cSql, CInt(query.lengthOfBytes(using: String.Encoding.utf8)), &ps, nil)
+            code = sqlite3_prepare_v3(sqlite3dbConn, cSql, CInt(query.lengthOfBytes(using: String.Encoding.utf8)),UInt32(SQLITE_PREPARE_NORMALIZE), &ps, nil)
         }
         
         if(code == SQLITE_OK)
@@ -281,6 +304,7 @@ public class SQLDataAccess: NSObject {
                 }
                 else if let txt = parameters![i] as? String {
                     flag = sqlite3_bind_text(ps, CInt(i+1), txt, -1, SQLITE_TRANSIENT)
+                    //flag = sqlite3_bind_text(ps, CInt(i+1), txt, Int32(txt.utf8.count), SQLITE_TRANSIENT)
                 }
                 else if let date = parameters![i] as? Date {
                     let dateStr = self.dbDateStr(date: date)
@@ -294,13 +318,13 @@ public class SQLDataAccess: NSObject {
                 }
                 else
                 {
-                    log.errorMessage(" : SQL Error Stmt No match found for Data Type")
+                    log.errorMessage(" SQL Error Stmt No match found for Data Type")
                 }
                 
                 if flag != SQLITE_OK {
                     let errMsg = String(validatingUTF8:sqlite3_errmsg(sqlite3dbConn))
                     let errCode = Int(sqlite3_errcode(sqlite3dbConn))
-                    log.errorMessage(" : SQL Error bind Stmt : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query)\n");
+                    log.errorMessage(" SQL Error bind Stmt : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query) : \nP = \(parameters)\n");
                 }
             }
         }
@@ -308,7 +332,7 @@ public class SQLDataAccess: NSObject {
         {
             let errMsg = String(validatingUTF8:sqlite3_errmsg(sqlite3dbConn))
             let errCode = Int(sqlite3_errcode(sqlite3dbConn))
-            log.errorMessage(" : SQL Error prepared Stmt : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query)\n");
+            log.errorMessage(" SQL Error prepared Stmt : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query)\n");
         }
         
         return ps
@@ -374,7 +398,7 @@ public class SQLDataAccess: NSObject {
                     {
                         NotificationCenter.default.post(name: SQLITE_DB_CORRUPTED, object: nil)
                     }
-                    log.errorMessage(" : SQL Error during execute : Err[\(errCode)] = \(String(describing: errMsg!)) : \nQ = \(query)\n : \nP = \(parameters)\n");
+                    log.errorMessage(" SQL Error during execute : Err[\(errCode)] = \(String(describing: errMsg!)) : \nQ = \(query)\n : \nP = \(parameters)\n");
                 }
             }
             sqlite3_finalize(ps)
@@ -416,7 +440,7 @@ public class SQLDataAccess: NSObject {
                     {
                         NotificationCenter.default.post(name: SQLITE_DB_CORRUPTED, object: nil)
                     }
-                    log.errorMessage(" : SQL Error during execute : Err[\(errCode)] = \(String(describing: errMsg!)) : \nQ = \(query)\n : \nP = \(parameters)\n");
+                    log.errorMessage(" SQL Error during execute : Err[\(errCode)] = \(String(describing: errMsg!)) : \nQ = \(query)\n : \nP = \(parameters)\n");
                 }
             }
             sqlite3_finalize(ps)
@@ -549,11 +573,11 @@ public class SQLDataAccess: NSObject {
                                 }
                                 else
                                 {
-                                    log.errorMessage(" : SQL Error getRecords Invalid Date ")
+                                    log.errorMessage(" SQL Error getRecords Invalid Date ")
                                 }
                             }
                         default:
-                            log.errorMessage(" : SQL Error getRecords Invalid column type")
+                            log.errorMessage(" SQL Error getRecords Invalid column type")
                         }
                     }
                     results.append(result)
@@ -563,7 +587,7 @@ public class SQLDataAccess: NSObject {
             {
                 let errMsg = String(validatingUTF8:sqlite3_errmsg(sqlite3dbConn))
                 let errCode = Int(sqlite3_errcode(sqlite3dbConn))
-                log.errorMessage(" : SQL Error getRecords : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query!)\n");
+                log.errorMessage(" SQL Error getRecords : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query!)\n");
             }
             sqlite3_finalize(ps)
         }
@@ -626,11 +650,11 @@ public class SQLDataAccess: NSObject {
                                 }
                                 else
                                 {
-                                    log.errorMessage(" : SQL Error getRecords Invalid Date ")
+                                    log.errorMessage(" SQL Error getRecords Invalid Date ")
                                 }
                             }
                         default:
-                            log.errorMessage(" : SQL Error getRecords Invalid column type")
+                            log.errorMessage(" SQL Error getRecords Invalid column type")
                         }
                     }
                     results.append(result)
@@ -640,7 +664,7 @@ public class SQLDataAccess: NSObject {
             {
                 let errMsg = String(validatingUTF8:sqlite3_errmsg(sqlite3dbConn))
                 let errCode = Int(sqlite3_errcode(sqlite3dbConn))
-                log.errorMessage(" : SQL Error getRecords : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query!)\n");
+                log.errorMessage(" SQL Error getRecords : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query!)\n");
             }
             sqlite3_finalize(ps)
         }
@@ -709,11 +733,11 @@ public class SQLDataAccess: NSObject {
                                     }
                                     else
                                     {
-                                        log.errorMessage(" : SQL Error getRecords Invalid Date ")
+                                        log.errorMessage(" SQL Error getRecords Invalid Date ")
                                     }
                                 }
                             default:
-                                log.errorMessage(" : SQL Error getRecords Invalid column type")
+                                log.errorMessage(" SQL Error getRecords Invalid column type")
                             }
                         }
                         results.append(result)
@@ -723,7 +747,7 @@ public class SQLDataAccess: NSObject {
                 {
                     let errMsg = String(validatingUTF8:sqlite3_errmsg(sqlite3dbConn))
                     let errCode = Int(sqlite3_errcode(sqlite3dbConn))
-                    log.errorMessage(" : SQL Error getRecords : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query)\n");
+                    log.errorMessage(" SQL Error getRecords : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query)\n");
                     if(rollBack)
                     {
                         sqlite3_exec(sqlite3dbConn, "ROLLBACK", nil, nil, nil)
@@ -773,7 +797,7 @@ public class SQLDataAccess: NSObject {
                         {
                             NotificationCenter.default.post(name: SQLITE_DB_CORRUPTED, object: nil)
                         }
-                        log.errorMessage(" : SQL Error during executeTransaction : Err[\(errCode)] = \(String(describing: errMsg!)) : \nQ = \(query)\n : \nP = \(parameters)\n");
+                        log.errorMessage(" SQL Error during executeTransaction : Err[\(errCode)] = \(String(describing: errMsg!)) : \nQ = \(query)\n : \nP = \(parameters)\n");
                         if(rollBack)
                         {
                             sqlite3_exec(sqlite3dbConn, "ROLLBACK", nil, nil, nil)
@@ -847,7 +871,7 @@ public class SQLDataAccess: NSObject {
         let copyDBPath = (docDir as NSString).appendingPathComponent(copyDBFile)
         let toDBPath = (docDir as NSString).appendingPathComponent(toDBFile)
         
-        if !(fm.fileExists(atPath:copyDBPath)) {
+        if (fm.fileExists(atPath:copyDBPath)) {
             do {
                 try fm.copyItem(atPath:copyDBPath, toPath:toDBPath)
                 status = true
@@ -855,6 +879,24 @@ public class SQLDataAccess: NSObject {
                 assert(false, ": copyDB : Failed to copy file \(copyDBPath) to \(toDBPath) Error - \(error.localizedDescription)")
                 status = false
             }
+        }
+        return status
+    }
+    
+    @discardableResult func moveDBtoDocumentDirectoryForName(_ fileName:String, dbName:String) -> Bool
+    {
+        var status:Bool = false
+        let fm = FileManager.default
+        let docDir = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory, FileManager.SearchPathDomainMask.userDomainMask, true)[0]
+        let path = (docDir as NSString).appendingPathComponent(dbName)
+        guard let rp = Bundle.main.resourcePath else { return false }
+        let from = (rp as NSString).appendingPathComponent(fileName)
+        do {
+            try fm.copyItem(atPath:from, toPath:path)
+            status = true
+        } catch let error {
+            assert(false, "DA : moveDB : Failed to move file \(fileName)! to Documents Directory Error - \(error.localizedDescription)")
+            status = false
         }
         return status
     }
@@ -876,7 +918,7 @@ public class SQLDataAccess: NSObject {
         }
     }
     
-    @discardableResult func replaceDBinDocumentDirectory(removeDBFile:String, renameDBFile:String) -> Bool
+    @discardableResult public func replaceDBinDocumentDirectory(removeDBFile:String, renameDBFile:String) -> Bool
     {
         var status:Bool = false
         let fm = FileManager.default
@@ -904,6 +946,30 @@ public class SQLDataAccess: NSObject {
         
         if !(fm.fileExists(atPath:removeDBPath)) {
             assert(false, "DA : replaceDB : Failed to replace file \(removeDBFile) with \(renameDBFile) Error ")
+            status = false
+        }
+        return status
+    }
+    
+    @discardableResult public func replaceDB(replaceDBFile:String, renameDBFile:String) -> Bool
+    {
+        var status:Bool = false
+        let fm = FileManager.default
+        let docDir = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory, FileManager.SearchPathDomainMask.userDomainMask, true)[0]
+        let replaceDBPath = (docDir as NSString).appendingPathComponent(replaceDBFile)
+        let renameDBPath = (docDir as NSString).appendingPathComponent(renameDBFile)
+        
+        do {
+            try fm.moveItem(atPath: renameDBPath, toPath: replaceDBPath)
+            status = true
+        } catch let error {
+            assert(false, "DM : replaceDB : Failed to move file \(renameDBFile)! Error - \(error.localizedDescription)")
+            status = false
+            return status
+        }
+                
+        if !(fm.fileExists(atPath:replaceDBPath)) {
+            assert(false, "DA : replaceDB : Failed to replace file \(replaceDBPath) with \(renameDBFile) Error ")
             status = false
         }
         return status
