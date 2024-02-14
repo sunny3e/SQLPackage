@@ -31,6 +31,7 @@ public class SQLDataAccess: NSObject {
     private let SQLITE_TRANSIENT = unsafeBitCast(-1, to:sqlite3_destructor_type.self)
     private let EN_KEY = "45763887E33478287EFFEB42890CD1EF"
     public var rollBack:Bool = false
+    public var enableLogs:Bool = false
 
     class Modifier: LogModifier {
         func modifyMessage(_ message: String, with logLevel: LogLevel) -> String {
@@ -212,6 +213,11 @@ public class SQLDataAccess: NSObject {
     {
         let sqliteVersion = sqlite3_libversion_number()
         return Int64(sqliteVersion)
+    }
+    
+    public func setEnableLogs(_ enable:Bool)
+    {
+        enableLogs = enable
     }
     
     public func dbEncrypt(_ key:String)
@@ -398,7 +404,10 @@ public class SQLDataAccess: NSObject {
                     {
                         NotificationCenter.default.post(name: SQLITE_DB_CORRUPTED, object: nil)
                     }
-                    log.errorMessage(" SQL Error during execute : Err[\(errCode)] = \(String(describing: errMsg!)) : \nQ = \(query)\n : \nP = \(parameters)\n");
+                    if(enableLogs)
+                    {
+                        log.errorMessage(" SQL Error during execute : Err[\(errCode)] = \(String(describing: errMsg!)) : \nQ = \(query)\n : \nP = \(parameters)\n")
+                    }
                 }
             }
             sqlite3_finalize(ps)
@@ -440,7 +449,10 @@ public class SQLDataAccess: NSObject {
                     {
                         NotificationCenter.default.post(name: SQLITE_DB_CORRUPTED, object: nil)
                     }
-                    log.errorMessage(" SQL Error during execute : Err[\(errCode)] = \(String(describing: errMsg!)) : \nQ = \(query)\n : \nP = \(parameters)\n");
+                    if(enableLogs)
+                    {
+                        log.errorMessage(" SQL Error during execute : Err[\(errCode)] = \(String(describing: errMsg!)) : \nQ = \(query)\n : \nP = \(parameters)\n")
+                    }
                 }
             }
             sqlite3_finalize(ps)
@@ -797,7 +809,10 @@ public class SQLDataAccess: NSObject {
                         {
                             NotificationCenter.default.post(name: SQLITE_DB_CORRUPTED, object: nil)
                         }
-                        log.errorMessage(" SQL Error during executeTransaction : Err[\(errCode)] = \(String(describing: errMsg!)) : \nQ = \(query)\n : \nP = \(parameters)\n");
+                        if(enableLogs)
+                        {
+                            log.errorMessage(" SQL Error during executeTransaction : Err[\(errCode)] = \(String(describing: errMsg!)) : \nQ = \(query)\n : \nP = \(parameters)\n")
+                        }
                         if(rollBack)
                         {
                             sqlite3_exec(sqlite3dbConn, "ROLLBACK", nil, nil, nil)
@@ -849,7 +864,10 @@ public class SQLDataAccess: NSObject {
                         {
                             NotificationCenter.default.post(name: SQLITE_DB_CORRUPTED, object: nil)
                         }
-                        log.errorMessage(" : SQL Error during executeTransaction : Err[\(errCode)] = \(String(describing: errMsg!)) : \nQ = \(query)\n : \nP = \(parameters)\n");
+                        if(enableLogs)
+                        {
+                            log.errorMessage(" : SQL Error during executeTransaction : Err[\(errCode)] = \(String(describing: errMsg!)) : \nQ = \(query)\n : \nP = \(parameters)\n")
+                        }
                         if(rollBack)
                         {
                             sqlite3_exec(sqlite3dbConn, "ROLLBACK", nil, nil, nil)
