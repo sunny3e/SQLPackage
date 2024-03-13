@@ -168,13 +168,13 @@ public class SQLDataAccess: NSObject {
         let error = sqlite3_open_v2(cpath!, &sqlite3dbConn, SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX, nil)
         if error != SQLITE_OK {
             // Open failed, close DB and fail
-            log.errorMessage(" - failed to open \(DB_FILE)!")
+            log.errorMessage(" - failed to open \(self.DB_FILE)!")
             sqlite3_close(sqlite3dbConn)
             return false
         }
         else
         {
-            log.debugMessage("\(DB_FILE) opened : path = \(path)")
+            log.debugMessage("\(self.DB_FILE) opened : path = \(path)")
         }
         
         return true
@@ -262,12 +262,12 @@ public class SQLDataAccess: NSObject {
         let error = sqlite3_open(cpath!, &sqlite3dbConn)
         if error != SQLITE_OK {
             // Open failed, close DB and fail
-            log.errorMessage(" - failed to open \(DB_FILE)!")
+            log.errorMessage(" - failed to open \(self.DB_FILE)!")
             sqlite3_close(sqlite3dbConn)
         }
         else
         {
-            log.debugMessage(" : \(DB_FILE) opened : path = \(path)")
+            log.debugMessage(" : \(self.DB_FILE) opened : path = \(path)")
         }
         
     }
