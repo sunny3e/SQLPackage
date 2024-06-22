@@ -577,8 +577,8 @@ public class SQLDataAccess: NSObject {
                                     var time:tm = tm(tm_sec: 0, tm_min: 0, tm_hour: 0, tm_mday: 0, tm_mon: 0, tm_year: 0, tm_wday: 0, tm_yday: 0, tm_isdst: 0, tm_gmtoff: 0, tm_zone:nil)
                                     strptime(dateStr, "%Y-%m-%d %H:%M:%S", &time)
                                     //time.tm_isdst = -1
-                                    //let diff = TimeZone.current.secondsFromGMT()
-                                    let t = mktime(&time)
+                                    let diff = TimeZone.current.secondsFromGMT()
+                                    let t = mktime(&time) + diff
                                     let ti = TimeInterval(t)
                                     let date = Date(timeIntervalSince1970:ti)
                                     result[String(validatingUTF8: name!)!] = date as AnyObject?
