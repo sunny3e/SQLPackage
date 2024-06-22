@@ -57,7 +57,6 @@ public class SQLDataAccess: NSObject {
         db_format.locale = Locale(identifier:"en_US_POSIX")
         db_format.timeZone = TimeZone(secondsFromGMT:0)
         db_format.dateFormat = "yyyy-MM-dd HH:mm:ss"
-        //logger.logLevel = .debug
     }
     
     deinit {
@@ -573,14 +572,7 @@ public class SQLDataAccess: NSObject {
                                 let dateStr = String(validatingUTF8:uptr)
                                 let set = CharacterSet(charactersIn:"-:")
                                 if dateStr?.rangeOfCharacter(from:set) != nil {
-                                    // Convert to time
-                                    var time:tm = tm(tm_sec: 0, tm_min: 0, tm_hour: 0, tm_mday: 0, tm_mon: 0, tm_year: 0, tm_wday: 0, tm_yday: 0, tm_isdst: 0, tm_gmtoff: 0, tm_zone:nil)
-                                    strptime(dateStr, "%Y-%m-%d %H:%M:%S", &time)
-                                    //time.tm_isdst = -1
-                                    let diff = TimeZone.current.secondsFromGMT()
-                                    let t = mktime(&time) + diff
-                                    let ti = TimeInterval(t)
-                                    let date = Date(timeIntervalSince1970:ti)
+                                    let date = dbStrDate(date: dateStr ?? "2023-01-01 00:00:00")
                                     result[String(validatingUTF8: name!)!] = date as AnyObject?
                                 }
                                 else
