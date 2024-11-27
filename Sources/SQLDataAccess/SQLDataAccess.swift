@@ -27,6 +27,7 @@ public class SQLDataAccess: NSObject {
     private var sqlite3dbConn:OpaquePointer? = nil
     private let db_format = DateFormatter()
     private let SQLITE_DATE = SQLITE_NULL + 1
+    private let SQLITE_UUID = SQLITE_NULL + 2
     private let SQLITE_STATIC = unsafeBitCast(0, to:sqlite3_destructor_type.self)
     private let SQLITE_TRANSIENT = unsafeBitCast(-1, to:sqlite3_destructor_type.self)
     private let EN_KEY = "45763887E33478287EFFEB42890CD1EF"
@@ -315,6 +316,10 @@ public class SQLDataAccess: NSObject {
                     let dateStr = self.dbDateStr(date: date)
                     flag = sqlite3_bind_text(ps, CInt(i+1), dateStr, -1, SQLITE_TRANSIENT)
                 }
+                else if let uuid = parameters![i] as? UUID {
+                    let uuidStr = uuid.uuidString
+                    flag = sqlite3_bind_text(ps, CInt(i+1), uuidStr, -1, SQLITE_TRANSIENT)
+                }
                 else if let dataValue = parameters![i] as? NSData {
                     flag = sqlite3_bind_blob(ps, CInt(i+1), dataValue.bytes, CInt(dataValue.length), SQLITE_TRANSIENT)
                 }
@@ -494,6 +499,7 @@ public class SQLDataAccess: NSObject {
         let intTypes  = ["BIGINT", "BIT", "BOOL", "BOOLEAN", "INT", "INT2", "INT8", "INTEGER", "MEDIUMINT", "SMALLINT", "TINYINT"]
         let nullTypes = ["NULL"]
         let realTypes = ["DECIMAL", "DOUBLE", "DOUBLE PRECISION", "FLOAT", "CGFLOAT", "NUMERIC", "REAL"]
+        let uuidTypes = ["UUID"]
         // Determine type of column - http://www.sqlite.org/c3ref/c_blob.html
         let buf = sqlite3_column_decltype(ps, index)
         if buf != nil {
@@ -520,6 +526,10 @@ public class SQLDataAccess: NSObject {
             if dateTypes.contains(tmp) {
                 return SQLITE_DATE
             }
+            if uuidTypes.contains(tmp) {
+                return SQLITE_UUID
+            }
+                
             //If none of the above has to be text
             return SQLITE_TEXT
         } else {
@@ -578,6 +588,20 @@ public class SQLDataAccess: NSObject {
                                 else
                                 {
                                     log.errorMessage(" SQL Error getRecords Invalid Date ")
+                                }
+                            }
+                        case SQLITE_UUID:
+                            if let ptr = UnsafeRawPointer.init(sqlite3_column_text(ps,i)) {
+                                let uptr = ptr.bindMemory(to:CChar.self, capacity:0)
+                                let uuidStr = String(validatingUTF8:uptr)
+                                let set = CharacterSet(charactersIn:"-")
+                                if uuidStr?.rangeOfCharacter(from:set) != nil {
+                                    let uuid = UUID(uuidString: uuidStr ?? UUID().uuidString)
+                                    result[String(validatingUTF8: name!)!] = uuid as AnyObject?
+                                }
+                                else
+                                {
+                                    log.errorMessage(" SQL Error getRecords Invalid UUID ")
                                 }
                             }
                         default:
@@ -642,19 +666,26 @@ public class SQLDataAccess: NSObject {
                                 let dateStr = String(validatingUTF8:uptr)
                                 let set = CharacterSet(charactersIn:"-:")
                                 if dateStr?.rangeOfCharacter(from:set) != nil {
-                                    // Convert to time
-                                    var time:tm = tm(tm_sec: 0, tm_min: 0, tm_hour: 0, tm_mday: 0, tm_mon: 0, tm_year: 0, tm_wday: 0, tm_yday: 0, tm_isdst: 0, tm_gmtoff: 0, tm_zone:nil)
-                                    strptime(dateStr, "%Y-%m-%d %H:%M:%S", &time)
-                                    time.tm_isdst = -1
-                                    let diff = TimeZone.current.secondsFromGMT()
-                                    let t = mktime(&time) + diff
-                                    let ti = TimeInterval(t)
-                                    let date = Date(timeIntervalSince1970:ti)
+                                    let date = dbStrDate(date: dateStr ?? "2023-01-01 00:00:00")
                                     result[String(validatingUTF8: name!)!] = date as AnyObject?
                                 }
                                 else
                                 {
                                     log.errorMessage(" SQL Error getRecords Invalid Date ")
+                                }
+                            }
+                        case SQLITE_UUID:
+                            if let ptr = UnsafeRawPointer.init(sqlite3_column_text(ps,i)) {
+                                let uptr = ptr.bindMemory(to:CChar.self, capacity:0)
+                                let uuidStr = String(validatingUTF8:uptr)
+                                let set = CharacterSet(charactersIn:"-")
+                                if uuidStr?.rangeOfCharacter(from:set) != nil {
+                                    let uuid = UUID(uuidString: uuidStr ?? UUID().uuidString)
+                                    result[String(validatingUTF8: name!)!] = uuid as AnyObject?
+                                }
+                                else
+                                {
+                                    log.errorMessage(" SQL Error getRecords Invalid UUID ")
                                 }
                             }
                         default:
@@ -725,19 +756,26 @@ public class SQLDataAccess: NSObject {
                                     let dateStr = String(validatingUTF8:uptr)
                                     let set = CharacterSet(charactersIn:"-:")
                                     if dateStr?.rangeOfCharacter(from:set) != nil {
-                                        // Convert to time
-                                        var time:tm = tm(tm_sec: 0, tm_min: 0, tm_hour: 0, tm_mday: 0, tm_mon: 0, tm_year: 0, tm_wday: 0, tm_yday: 0, tm_isdst: 0, tm_gmtoff: 0, tm_zone:nil)
-                                        strptime(dateStr, "%Y-%m-%d %H:%M:%S", &time)
-                                        time.tm_isdst = -1
-                                        let diff = TimeZone.current.secondsFromGMT()
-                                        let t = mktime(&time) + diff
-                                        let ti = TimeInterval(t)
-                                        let date = Date(timeIntervalSince1970:ti)
+                                        let date = dbStrDate(date: dateStr ?? "2023-01-01 00:00:00")
                                         result[String(validatingUTF8: name!)!] = date as AnyObject?
                                     }
                                     else
                                     {
                                         log.errorMessage(" SQL Error getRecords Invalid Date ")
+                                    }
+                                }
+                            case SQLITE_UUID:
+                                if let ptr = UnsafeRawPointer.init(sqlite3_column_text(ps,i)) {
+                                    let uptr = ptr.bindMemory(to:CChar.self, capacity:0)
+                                    let uuidStr = String(validatingUTF8:uptr)
+                                    let set = CharacterSet(charactersIn:"-")
+                                    if uuidStr?.rangeOfCharacter(from:set) != nil {
+                                        let uuid = UUID(uuidString: uuidStr ?? UUID().uuidString)
+                                        result[String(validatingUTF8: name!)!] = uuid as AnyObject?
+                                    }
+                                    else
+                                    {
+                                        log.errorMessage(" SQL Error getRecords Invalid UUID ")
                                     }
                                 }
                             default:
