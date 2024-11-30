@@ -283,7 +283,6 @@ public class SQLDataAccess: NSObject {
         
         //Do sanity check on query first to make sure it's Ok
         if let cSql = query.cString(using: String.Encoding.utf8) {
-            //code = sqlite3_prepare_v2(sqlite3dbConn, cSql, CInt(query.lengthOfBytes(using: String.Encoding.utf8)), &ps, nil)
             code = sqlite3_prepare_v3(sqlite3dbConn, cSql, CInt(query.lengthOfBytes(using: String.Encoding.utf8)),UInt32(SQLITE_PREPARE_NORMALIZE), &ps, nil)
         }
         
@@ -320,8 +319,10 @@ public class SQLDataAccess: NSObject {
                     let uuidStr = uuid.uuidString
                     flag = sqlite3_bind_text(ps, CInt(i+1), uuidStr, -1, SQLITE_TRANSIENT)
                 }
-                else if let dataValue = parameters![i] as? NSData {
-                    flag = sqlite3_bind_blob(ps, CInt(i+1), dataValue.bytes, CInt(dataValue.length), SQLITE_TRANSIENT)
+                else if let dataValue = parameters![i] as? Data {
+                     dataValue.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
+                        flag = sqlite3_bind_blob(ps, CInt(i+1), bytes.baseAddress, CInt(dataValue.count), SQLITE_TRANSIENT)
+                    }
                 }
                 else if parameters![i] is NSNull {
                     flag = sqlite3_bind_null(ps,CInt(i+1));
@@ -493,7 +494,7 @@ public class SQLDataAccess: NSObject {
     private func getColumnType(_ ps:OpaquePointer,_ index:CInt)->CInt {
         var type:CInt = 0
         // Column types - http://www.sqlite.org/datatype3.html (section 2.2 table column 1)
-        let blobTypes = ["BINARY", "BLOB", "VARBINARY"]
+        let blobTypes = ["BINARY", "BLOB", "VARBINARY", "DATA"]
         let charTypes = ["CHAR", "CHARACTER", "CLOB", "NATIONAL VARYING CHARACTER", "NATIVE CHARACTER", "NCHAR", "NVARCHAR", "TEXT", "VARCHAR", "VARIANT", "VARYING CHARACTER"]
         let dateTypes = ["DATE", "DATETIME", "TIME", "TIMESTAMP"]
         let intTypes  = ["BIGINT", "BIT", "BOOL", "BOOLEAN", "INT", "INT2", "INT8", "INTEGER", "MEDIUMINT", "SMALLINT", "TINYINT"]
@@ -572,7 +573,7 @@ public class SQLDataAccess: NSObject {
                                 result[String(validatingUTF8: name!)!] = String(validatingUTF8:uptr) as AnyObject?
                             }
                         case SQLITE_BLOB:
-                            result[String(validatingUTF8: name!)!] = NSData(bytes:sqlite3_column_blob(ps,i), length:Int(sqlite3_column_bytes(ps,i))) as AnyObject?
+                            result[String(validatingUTF8: name!)!] = Data(bytes:sqlite3_column_blob(ps,i), count:Int(sqlite3_column_bytes(ps,i))) as AnyObject?
                         case SQLITE_NULL:
                             result[String(validatingUTF8: name!)!] = String(validatingUTF8:"") as AnyObject?
                         case SQLITE_DATE:
@@ -656,7 +657,7 @@ public class SQLDataAccess: NSObject {
                                 result[String(validatingUTF8: name!)!] = String(validatingUTF8:uptr) as AnyObject?
                             }
                         case SQLITE_BLOB:
-                            result[String(validatingUTF8: name!)!] = NSData(bytes:sqlite3_column_blob(ps,i), length:Int(sqlite3_column_bytes(ps,i))) as AnyObject?
+                            result[String(validatingUTF8: name!)!] = Data(bytes:sqlite3_column_blob(ps,i), count:Int(sqlite3_column_bytes(ps,i))) as AnyObject?
                         case SQLITE_NULL:
                             result[String(validatingUTF8: name!)!] = String(validatingUTF8:"") as AnyObject?
                         case SQLITE_DATE:
@@ -746,7 +747,7 @@ public class SQLDataAccess: NSObject {
                                     result[String(validatingUTF8: name!)!] = String(validatingUTF8:uptr) as AnyObject?
                                 }
                             case SQLITE_BLOB:
-                                result[String(validatingUTF8: name!)!] = NSData(bytes:sqlite3_column_blob(ps,i), length:Int(sqlite3_column_bytes(ps,i))) as AnyObject?
+                                result[String(validatingUTF8: name!)!] = Data(bytes:sqlite3_column_blob(ps,i), count:Int(sqlite3_column_bytes(ps,i))) as AnyObject?
                             case SQLITE_NULL:
                                 result[String(validatingUTF8: name!)!] = String(validatingUTF8:"") as AnyObject?
                             case SQLITE_DATE:
