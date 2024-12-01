@@ -573,7 +573,13 @@ public class SQLDataAccess: NSObject {
                                 result[String(validatingUTF8: name!)!] = String(validatingUTF8:uptr) as AnyObject?
                             }
                         case SQLITE_BLOB:
-                            result[String(validatingUTF8: name!)!] = Data(bytes:sqlite3_column_blob(ps,i), count:Int(sqlite3_column_bytes(ps,i))) as AnyObject?
+                            if let bytes = sqlite3_column_blob(ps,i) {
+                                result[String(validatingUTF8: name!)!] = Data(bytes:bytes, count:Int(sqlite3_column_bytes(ps,i))) as AnyObject?
+                            }
+                            else
+                            {
+                                result[String(validatingUTF8: name!)!] = Data() as AnyObject?
+                            }
                         case SQLITE_NULL:
                             result[String(validatingUTF8: name!)!] = String(validatingUTF8:"") as AnyObject?
                         case SQLITE_DATE:
@@ -657,7 +663,13 @@ public class SQLDataAccess: NSObject {
                                 result[String(validatingUTF8: name!)!] = String(validatingUTF8:uptr) as AnyObject?
                             }
                         case SQLITE_BLOB:
-                            result[String(validatingUTF8: name!)!] = Data(bytes:sqlite3_column_blob(ps,i), count:Int(sqlite3_column_bytes(ps,i))) as AnyObject?
+                            if let bytes = sqlite3_column_blob(ps,i) {
+                                result[String(validatingUTF8: name!)!] = Data(bytes:bytes, count:Int(sqlite3_column_bytes(ps,i))) as AnyObject?
+                            }
+                            else
+                            {
+                                result[String(validatingUTF8: name!)!] = Data() as AnyObject?
+                            }
                         case SQLITE_NULL:
                             result[String(validatingUTF8: name!)!] = String(validatingUTF8:"") as AnyObject?
                         case SQLITE_DATE:
@@ -747,7 +759,13 @@ public class SQLDataAccess: NSObject {
                                     result[String(validatingUTF8: name!)!] = String(validatingUTF8:uptr) as AnyObject?
                                 }
                             case SQLITE_BLOB:
-                                result[String(validatingUTF8: name!)!] = Data(bytes:sqlite3_column_blob(ps,i), count:Int(sqlite3_column_bytes(ps,i))) as AnyObject?
+                                if let bytes = sqlite3_column_blob(ps,i) {
+                                    result[String(validatingUTF8: name!)!] = Data(bytes:bytes, count:Int(sqlite3_column_bytes(ps,i))) as AnyObject?
+                                }
+                                else
+                                {
+                                    result[String(validatingUTF8: name!)!] = Data() as AnyObject?
+                                }
                             case SQLITE_NULL:
                                 result[String(validatingUTF8: name!)!] = String(validatingUTF8:"") as AnyObject?
                             case SQLITE_DATE:
