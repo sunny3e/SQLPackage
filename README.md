@@ -270,7 +270,7 @@ When you write your SQL Queries as a String, all the terms that follow are in a 
 
 ## Upsert Capability For High Performance
 
-Usually in order for you to insert or update the SQLite DB, you need to know if the data already exists in the DB or not. As such you usually execute a SQL query to determine if the data exists, if it does you do an update, if it doesn't you then do an insert. When fetching lots of data from a Server where megabytes of JSON comes down and then needs to be written into the DB, the SQL query to determine if it exists or not can become expensive performance wise. To get around this issue SQLite supports Upsert which is really just an Insert followed by an On Conflict(id) Do Update SQL Query. The On Conflict statement needs an indexed column that is unique in order to work, a column like id will work. Using the Upsert command you now don't need a separate lookup anymore, and your Codable Model can just parse the JSON and then write it directly into the DB using the Upsert command. The Upsert SQL query will determine if it needs to do an insert or an update automatically. The Sqldb package will create the SQL for you for the Upsert command, simply call Sqldb : getSQLUpsertValid(whereItems:ForId) where the ForId is the column that is indexed and has to be unique.
+Usually in order for you to insert or update the SQLite DB, you need to know if the data already exists in the DB or not. As such you usually execute a SQL query to determine if the data exists, if it does you do an update, if it doesn't you then do an insert. When fetching lots of data from a Server where megabytes of JSON comes down and then needs to be written into the DB, the SQL query to determine if it exists or not can become expensive performance wise. To get around this issue SQLite supports Upsert which is really just an Insert followed by an On Conflict(id) Do Update SQL Query. The On Conflict statement needs an indexed column that is unique in order to work, a column like id will work. Using the Upsert command you now don't need a separate lookup anymore, and your Codable Model can just parse the JSON and then write it directly into the DB using the Upsert command. The Upsert SQL query will determine if it needs to do an insert or an update automatically. The Sqldb package will create the SQL for you for the Upsert command, simply call Sqldb : getSQLUpsertValid(whereItems:"items",forId:"id") where the forId is the column that is indexed and has to be unique.
 
 Using Upsert you can see a 2X performance speed up for inserting or updating large amounts of data into SQLite.
 
@@ -280,17 +280,21 @@ The results array is an Array of Dictionary’s where the ‘key’ is your tabl
 
 SQLDataAccess will store, ***text, double, float, blob, Date, integer and long long integers***. 
 
-For Blobs you can store ***binary, varbinary, blob.***
+For Blobs you can store ***binary, varbinary, blob, Data.***
+
+You can store Swift Data types directly.
 
 For Text you can store ***char, character, clob, national varying character, native character, nchar, nvarchar, varchar, variant, varying character, text***.
 
-For Dates you can store ***datetime, time, timestamp, date.*** No need to convert Dates to Strings and back and forth, SQLDataAccess does all that for you! Dates are always stored as UTC in the DB and day light savings time is also taken into account for the local you are in.
+For Dates you can store ***datetime, time, timestamp, date.*** No need to convert Dates to Strings and back and forth, SQLDataAccess does all that for you! Dates should always be stored as UTC in the DB and are stored using DataFormatter ***yyyy-MM-dd HH:mm:ss*** so DataFormatter takes care of day light savings time for the "en\_US\_POSIX" local you are in.
 
 For Integers you can store ***bigint, bit, bool, boolean, int2, int8, integer, mediumint, smallint, tinyint, int.***
 
 For Doubles you can store ***decimal, double precision, float, numeric, real, double.*** Double has the most precision.
 
 You can even store Nulls of type ***Null.***
+
+You can also store Swift UUID directy of type ***UUID.***
 
 You just declare these types in tables, and and your Codable struct, and SQLDataAccess does the rest for you!
 
