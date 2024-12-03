@@ -20,6 +20,7 @@ public class SQLDataAccess: NSObject {
     var DB_FILE = "SQLite.db"
     var DB2_FILE = "SQLite2.db"
     let SQLITE_DB_CORRUPTED = Notification.Name("SQLITE_DB_CORRUPTED")
+    let SQLITE_DB_ERR_MESSAGE = Notification.Name("SQLITE_DB_ERR_MESSAGE")
     private var path:String!
     private let DB_Queue = "SQLiteQueue"
     private var queue:DispatchQueue!
@@ -196,6 +197,8 @@ public class SQLDataAccess: NSObject {
         {
             let errMsg = String(validatingUTF8:sqlite3_errmsg(sqlite3dbConn))
             log.errorMessage(" : foreignKeys : sqlErrCode = \(errCode) : sqlErrMsg = \(errMsg!)")
+            let options = ["Message":"foreignKeys Error : Err[\(errCode)]","ErrMsg":"\(String(describing: errMsg!))"]
+            NotificationCenter.default.post(name: SQLITE_DB_ERR_MESSAGE, object: options)
         }
     }
     
@@ -234,6 +237,8 @@ public class SQLDataAccess: NSObject {
         {
             let errMsg = String(validatingUTF8:sqlite3_errmsg(sqlite3dbConn))
             log.errorMessage(" : ENCRYPT : sqlErrCode = \(errCode) : sqlErrMsg = \(errMsg!)")
+            let options = ["Message":"ENCRYPT Error : Err[\(errCode)]","ErrMsg":"\(String(describing: errMsg!))"]
+            NotificationCenter.default.post(name: SQLITE_DB_ERR_MESSAGE, object: options)
         }
     }
     
@@ -254,6 +259,8 @@ public class SQLDataAccess: NSObject {
         {
             let errMsg = String(validatingUTF8:sqlite3_errmsg(sqlite3dbConn))
             log.errorMessage(" : DECRYPT : sqlErrCode = \(errCode) : sqlErrMsg = \(errMsg!)")
+            let options = ["Message":"DECRYPT Error : Err[\(errCode)]","ErrMsg":"\(String(describing: errMsg!))"]
+            NotificationCenter.default.post(name: SQLITE_DB_ERR_MESSAGE, object: options)
         }
         replaceDBinDocumentDirectory(removeDBFile: DB_FILE, renameDBFile: DB_FILE+"X")
         let path = pathForFileWithName(fileName: DB_FILE)
@@ -336,6 +343,8 @@ public class SQLDataAccess: NSObject {
                     let errMsg = String(validatingUTF8:sqlite3_errmsg(sqlite3dbConn))
                     let errCode = Int(sqlite3_errcode(sqlite3dbConn))
                     log.errorMessage(" SQL Error bind Stmt : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query) : \nP = \(parameters)\n");
+                    let options = ["Message":"SQL Error bind Stmt : Err[\(errCode)]","ErrMsg":"\(String(describing: errMsg!))","Query":"Q = \(String(describing:query)) : P = \(String(describing: parameters))"]
+                    NotificationCenter.default.post(name: SQLITE_DB_ERR_MESSAGE, object: options)
                 }
             }
         }
@@ -344,6 +353,8 @@ public class SQLDataAccess: NSObject {
             let errMsg = String(validatingUTF8:sqlite3_errmsg(sqlite3dbConn))
             let errCode = Int(sqlite3_errcode(sqlite3dbConn))
             log.errorMessage(" SQL Error prepared Stmt : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query)\n");
+            let options = ["Message":"SQL Error prepared Stmt : Err[\(errCode)]","ErrMsg":"\(String(describing: errMsg!))","Query":"Q = \(String(describing:query))"]
+            NotificationCenter.default.post(name: SQLITE_DB_ERR_MESSAGE, object: options)
         }
         
         return ps
@@ -412,6 +423,8 @@ public class SQLDataAccess: NSObject {
                     if(enableLogs)
                     {
                         log.errorMessage(" SQL Error during execute : Err[\(errCode)] = \(String(describing: errMsg!)) : \nQ = \(query)\n : \nP = \(parameters)\n")
+                        let options = ["Message":"SQL Error  during execute : Err[\(errCode)]","ErrMsg":"\(String(describing: errMsg!))","Query":"Q = \(String(describing:query)) : P = \(String(describing: parameters))"]
+                        NotificationCenter.default.post(name: SQLITE_DB_ERR_MESSAGE, object: options)
                     }
                 }
             }
@@ -457,6 +470,8 @@ public class SQLDataAccess: NSObject {
                     if(enableLogs)
                     {
                         log.errorMessage(" SQL Error during execute : Err[\(errCode)] = \(String(describing: errMsg!)) : \nQ = \(query)\n : \nP = \(parameters)\n")
+                        let options = ["Message":"SQL Error  during execute : Err[\(errCode)]","ErrMsg":"\(String(describing: errMsg!))","Query":"Q = \(String(describing:query)) : P = \(String(describing: parameters))"]
+                        NotificationCenter.default.post(name: SQLITE_DB_ERR_MESSAGE, object: options)
                     }
                 }
             }
@@ -595,6 +610,8 @@ public class SQLDataAccess: NSObject {
                                 else
                                 {
                                     log.errorMessage(" SQL Error getRecords Invalid Date ")
+                                    let options = ["Message":"SQL Error getRecords Invalid Date"]
+                                    NotificationCenter.default.post(name: SQLITE_DB_ERR_MESSAGE, object: options)
                                 }
                             }
                         case SQLITE_UUID:
@@ -609,10 +626,14 @@ public class SQLDataAccess: NSObject {
                                 else
                                 {
                                     log.errorMessage(" SQL Error getRecords Invalid UUID ")
+                                    let options = ["Message":"SQL Error getRecords Invalid UUID"]
+                                    NotificationCenter.default.post(name: SQLITE_DB_ERR_MESSAGE, object: options)
                                 }
                             }
                         default:
                             log.errorMessage(" SQL Error getRecords Invalid column type")
+                            let options = ["Message":"SQL Error getRecords Invalid column type"]
+                            NotificationCenter.default.post(name: SQLITE_DB_ERR_MESSAGE, object: options)
                         }
                     }
                     results.append(result)
@@ -623,6 +644,8 @@ public class SQLDataAccess: NSObject {
                 let errMsg = String(validatingUTF8:sqlite3_errmsg(sqlite3dbConn))
                 let errCode = Int(sqlite3_errcode(sqlite3dbConn))
                 log.errorMessage(" SQL Error getRecords : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query!)\n");
+                let options = ["Message":"SQL Error  getRecords  : Err[\(errCode)]","ErrMsg":"\(String(describing: errMsg!))","Query":"Q = \(String(describing:query))"]
+                NotificationCenter.default.post(name: SQLITE_DB_ERR_MESSAGE, object: options)
             }
             sqlite3_finalize(ps)
         }
@@ -685,6 +708,8 @@ public class SQLDataAccess: NSObject {
                                 else
                                 {
                                     log.errorMessage(" SQL Error getRecords Invalid Date ")
+                                    let options = ["Message":"SQL Error getRecords Invalid Date"]
+                                    NotificationCenter.default.post(name: SQLITE_DB_ERR_MESSAGE, object: options)
                                 }
                             }
                         case SQLITE_UUID:
@@ -699,10 +724,14 @@ public class SQLDataAccess: NSObject {
                                 else
                                 {
                                     log.errorMessage(" SQL Error getRecords Invalid UUID ")
+                                    let options = ["Message":"SQL Error getRecords Invalid UUID"]
+                                    NotificationCenter.default.post(name: SQLITE_DB_ERR_MESSAGE, object: options)
                                 }
                             }
                         default:
                             log.errorMessage(" SQL Error getRecords Invalid column type")
+                            let options = ["Message":"SQL Error getRecords Invalid column type"]
+                            NotificationCenter.default.post(name: SQLITE_DB_ERR_MESSAGE, object: options)
                         }
                     }
                     results.append(result)
@@ -712,7 +741,9 @@ public class SQLDataAccess: NSObject {
             {
                 let errMsg = String(validatingUTF8:sqlite3_errmsg(sqlite3dbConn))
                 let errCode = Int(sqlite3_errcode(sqlite3dbConn))
-                log.errorMessage(" SQL Error getRecords : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query!)\n");
+                log.errorMessage(" SQL Error getRecords : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query!)\n")
+                let options = ["Message":"SQL Error  getRecords  : Err[\(errCode)]","ErrMsg":"\(String(describing: errMsg!))","Query":"Q = \(String(describing:query))"]
+                NotificationCenter.default.post(name: SQLITE_DB_ERR_MESSAGE, object: options)
             }
             sqlite3_finalize(ps)
         }
@@ -781,6 +812,8 @@ public class SQLDataAccess: NSObject {
                                     else
                                     {
                                         log.errorMessage(" SQL Error getRecords Invalid Date ")
+                                        let options = ["Message":"SQL Error getRecords Invalid Date"]
+                                        NotificationCenter.default.post(name: SQLITE_DB_ERR_MESSAGE, object: options)
                                     }
                                 }
                             case SQLITE_UUID:
@@ -795,10 +828,14 @@ public class SQLDataAccess: NSObject {
                                     else
                                     {
                                         log.errorMessage(" SQL Error getRecords Invalid UUID ")
+                                        let options = ["Message":"SQL Error getRecords Invalid UUID"]
+                                        NotificationCenter.default.post(name: SQLITE_DB_ERR_MESSAGE, object: options)
                                     }
                                 }
                             default:
                                 log.errorMessage(" SQL Error getRecords Invalid column type")
+                                let options = ["Message":"SQL Error getRecords Invalid column type"]
+                                NotificationCenter.default.post(name: SQLITE_DB_ERR_MESSAGE, object: options)
                             }
                         }
                         results.append(result)
@@ -808,7 +845,9 @@ public class SQLDataAccess: NSObject {
                 {
                     let errMsg = String(validatingUTF8:sqlite3_errmsg(sqlite3dbConn))
                     let errCode = Int(sqlite3_errcode(sqlite3dbConn))
-                    log.errorMessage(" SQL Error getRecords : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query)\n");
+                    log.errorMessage(" SQL Error getRecords : Err[\(errCode)] = \(String(describing: errMsg!)) : Q = \(query)\n")
+                    let options = ["Message":"SQL Error  getRecords  : Err[\(errCode)]","ErrMsg":"\(String(describing: errMsg!))","Query":"Q = \(String(describing:query))"]
+                    NotificationCenter.default.post(name: SQLITE_DB_ERR_MESSAGE, object: options)
                     if(rollBack)
                     {
                         sqlite3_exec(sqlite3dbConn, "ROLLBACK", nil, nil, nil)
@@ -861,6 +900,8 @@ public class SQLDataAccess: NSObject {
                         if(enableLogs)
                         {
                             log.errorMessage(" SQL Error during executeTransaction : Err[\(errCode)] = \(String(describing: errMsg!)) : \nQ = \(query)\n : \nP = \(parameters)\n")
+                            let options = ["Message":"SQL Error during executeTransaction : Err[\(errCode)]","ErrMsg":"\(String(describing: errMsg!))","Query":"Q = \(String(describing:query)) : P = \(String(describing: parameters))"]
+                            NotificationCenter.default.post(name: SQLITE_DB_ERR_MESSAGE, object: options)
                         }
                         if(rollBack)
                         {
@@ -916,6 +957,8 @@ public class SQLDataAccess: NSObject {
                         if(enableLogs)
                         {
                             log.errorMessage(" : SQL Error during executeTransaction : Err[\(errCode)] = \(String(describing: errMsg!)) : \nQ = \(query)\n : \nP = \(parameters)\n")
+                            let options = ["Message":"SQL Error during executeTransaction : Err[\(errCode)]","ErrMsg":"\(String(describing: errMsg!))","Query":"Q = \(String(describing:query)) : P = \(String(describing: parameters))"]
+                            NotificationCenter.default.post(name: SQLITE_DB_ERR_MESSAGE, object: options)
                         }
                         if(rollBack)
                         {
