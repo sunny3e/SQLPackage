@@ -5,7 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "SQLPackage",
-    platforms: [.macOS(.v10_11),
+    platforms: [.macOS(.v12),
     .iOS(.v13),
     .tvOS(.v10),
     .watchOS(.v5)],
